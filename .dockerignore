@@ -1,0 +1,11 @@
+# git files
+.git/
+.gitignore
+
+# macOS files
+.DS_Store
+
+# documentation files
+*.md
+
+.dockerignore

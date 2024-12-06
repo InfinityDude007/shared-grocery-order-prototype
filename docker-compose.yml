@@ -1,0 +1,60 @@
+services:
+
+  # postgresql service
+  db:
+    image: postgres:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    ports:
+      # expose default postgresql port
+      - "${DATABASE_PORT}:5432"
+    healthcheck:
+      # verify if postgresql is ready
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      # connect container to 'ssh-network'
+      - ssh-network
+
+  # app server
+  server:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      SERVER_PORT: ${SERVER_PORT}
+    depends_on:
+      # ensure 'db' service is healthy
+      db:
+        condition: service_healthy
+    ports:
+      # expose server's port to host
+      - "${SERVER_PORT}:5000"
+    networks:
+      # connect container to 'ssh-network'
+      - ssh-network
+
+# define named volumes
+volumes:
+  db_data:
+
+# define network
+networks:
+  ssh-network:
+    driver: bridge
