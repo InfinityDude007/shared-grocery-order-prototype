@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from .database import SessionLocal
+from .database import session
 
 """
 Function Overview:
@@ -10,12 +10,9 @@ Function Logic:
 2. Yield session, allowing for calling function to use it for querying the database.
 3. Once the function finishes, session is automatically closed, ensuring proper resource management.
 
-Parameters:
-- db_session (AsyncSession): The session yielded to calling function for database interaction.
-
 Returns:
-- AsyncSession: A session object that can be used to interact with the database asynchronously.
+- db_session (AsyncSession): The session object yielded to calling function for database interaction.
 """
 async def fetch_db_session():
-    async with SessionLocal() as db_session:
+    async with session() as db_session:
         yield db_session
