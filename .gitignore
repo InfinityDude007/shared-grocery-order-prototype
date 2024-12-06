@@ -1,0 +1,9 @@
+# macOS files
+.DS_Store
+
+# env file
+.env
+
+# server files
+/db-init
+__pycache__/
