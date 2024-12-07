@@ -35,8 +35,7 @@ async def create_database():
             await connection.execute(f"CREATE DATABASE {NAME}")
             print(f"New database '{NAME}' created.")
         else:
-            print(f"The database '{NAME}' already exists. Skipping creation."
-)
+            print(f"The database '{NAME}' already exists. Skipping creation.")
     finally:
         await connection.close()
 

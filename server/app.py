@@ -41,8 +41,8 @@ Returns:
 - A dictionary with a success message (FastAPI will automatically serialize this to a JSON response).
 # Return a dictionary that FastAPI will automatically serialize to JSON
 """
-@app.get('/app/StartupTestRoute')
-async def test_route():
+@app.get('/')
+async def read_root():
     return {
         "response": "Test route was called successfully.",
         "app_status": "Running."
