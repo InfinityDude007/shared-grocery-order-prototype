@@ -58,3 +58,4 @@ Returns:
 @pytest.mark.asyncio
 async def test_db_connection(connect_to_db):
     assert connect_to_db is not None
+    print("Database connection successful!")
