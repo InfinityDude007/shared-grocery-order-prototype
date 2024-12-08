@@ -40,13 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r server/requirements.txt
 
-      # Step 6: Clear pytest cache to ensure fresh test runs and modules
-      - name: Clear pytest cache
-        run: |
-          source venv/bin/activate
-          pytest --cache-clear
-
-      # Step 7: Run the database setup script from the project in the virtual environment
+      # Step 6: Run the database setup script from the project in the virtual environment
       - name: Run database setup
         run: |
           source venv/bin/activate
@@ -59,6 +53,7 @@ jobs:
           DATABASE_PORT: 5432
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
 
+      # Step 7: Run the pytest script from the tests directory to validate database connection
       - name: Test database connection with pytest
         run: |
           source venv/bin/activate
