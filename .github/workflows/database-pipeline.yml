@@ -45,7 +45,19 @@ jobs:
         run: |
           source venv/bin/activate
           PYTHONPATH=$(pwd) python -m server.database -c "import asyncio; asyncio.run(create_database())"
-        
+        env:
+          # Set environment variables required for database connection from the repo secrets
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_HOST: postgres
+          DATABASE_PORT: 5432
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+
+      # Step 7: Run the pytest script from the tests directory to validate database connection
+      - name: Test database connection with pytest
+        run: |
+          source venv/bin/activate
+          pytest -s tests/test_db_connection.py
         env:
           # Set environment variables required for database connection from the repo secrets
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
