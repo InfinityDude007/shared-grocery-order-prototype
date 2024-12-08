@@ -33,16 +33,18 @@ jobs:
         run: |
           rm -rf ~/.cache/pip
 
-      # Step 5: Clear pytest cache to ensure fresh test runs and modules
-      - name: Clear pytest cache
-        run: pytest --cache-clear
-
-      # Step 6: Install Python dependencies from the 'server/requirements.txt' onto the virtual environment
+      # Step 5: Install Python dependencies from the 'server/requirements.txt' onto the virtual environment
       - name: Install dependencies
         run: |
           source venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r server/requirements.txt
+
+      # Step 6: Clear pytest cache to ensure fresh test runs and modules
+      - name: Clear pytest cache
+        run: |
+          source venv/bin/activate
+          pytest --cache-clear
 
       # Step 7: Run the database setup script from the project in the virtual environment
       - name: Run database setup
