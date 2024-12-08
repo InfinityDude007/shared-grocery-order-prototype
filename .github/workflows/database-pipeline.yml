@@ -33,14 +33,18 @@ jobs:
         run: |
           rm -rf ~/.cache/pip
 
-      # Step 5: Install Python dependencies from the 'server/requirements.txt' onto the virtual environment
+      # Step 5: Clear pytest cache to ensure fresh test runs and modules
+      - name: Clear pytest cache
+        run: pytest --cache-clear
+
+      # Step 6: Install Python dependencies from the 'server/requirements.txt' onto the virtual environment
       - name: Install dependencies
         run: |
           source venv/bin/activate
           python -m pip install --upgrade pip
           pip install -r server/requirements.txt
 
-      # Step 6: Run the database setup script from the project in the virtual environment
+      # Step 7: Run the database setup script from the project in the virtual environment
       - name: Run database setup
         run: |
           source venv/bin/activate
@@ -56,7 +60,7 @@ jobs:
       - name: Test database connection with pytest
         run: |
           source venv/bin/activate
-          pytest tests/test_db_connection.py
+          pytest -s tests/test_db_connection.py
         env:
           # Set environment variables required for database connection from the repo secrets
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
