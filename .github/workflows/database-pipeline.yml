@@ -56,7 +56,7 @@ jobs:
       - name: Test database connection with pytest
         run: |
           source venv/bin/activate
-          pytest -v test_db_connection.py
+          pytest -v tests/test_db_connection.py
         env:
           # Set environment variables required for database connection from the repo secrets
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
