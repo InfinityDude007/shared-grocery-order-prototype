@@ -1,11 +1,16 @@
 name: Database Setup Pipeline
 
 # Trigger the pipeline on push or pull request to the 'main' branch
+
+#on:
+#    push:
+#        branches: [main]
+#    pull_request:
+#        branches: [main]
+
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [supermarket-integration]
 
 jobs:
   database-setup:
