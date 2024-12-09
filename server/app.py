@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .api import api_router
-from .database import create_database
+from .database import create_database, setup_database
 
 """
 Function Overview:
@@ -14,6 +14,7 @@ Function Logic:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_database()
+    await setup_database()
 
     # any other functions that need to execute as the application is started should go here.
 

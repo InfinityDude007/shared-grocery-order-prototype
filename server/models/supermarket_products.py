@@ -1,10 +1,9 @@
 from .base_model import BaseModel
-from sqlalchemy import String, Integer, Float, Table, Column
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Integer, Float, Column
 
 
 
-class Supermarket(BaseModel):
+class SupermarketProducts(BaseModel):
     __tablename__ = 'SupermarketProducts'
 
     product_id = Column(String(5), unique=True, nullable=False, primary_key=True)
@@ -13,4 +12,4 @@ class Supermarket(BaseModel):
     product_stock = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return f"Supermarket(name'{self.product_name}')>"
+        return f"SupermarketProducts(name'{self.product_name}')>"
