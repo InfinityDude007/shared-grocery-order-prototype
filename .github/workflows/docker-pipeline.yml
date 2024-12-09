@@ -1,15 +1,15 @@
 name: Docker CI/CD Pipeline
 
 # Trigger the pipeline on push or pull request to the 'main' branch
-#on:
-#  push:
-#    branches: [main]
-#  pull_request:
-#    branches: [main]
-
 on:
   push:
-    branches: [supermarket-integration]
+    branches:
+      - 'main'
+      - '*-implementation'
+      - '*-integration'
+  pull_request:
+    branches:
+      - 'main'
 
 jobs:
   docker-build-and-push:
