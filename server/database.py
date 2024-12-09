@@ -43,8 +43,6 @@ async def create_database():
         await connection.close()
 
     async with async_engine.begin() as db_connection:
-        # potentially create this as a seperate function and move into asyccontextmanager in app.py
-        # also consider instead dropping entire database to leave behind a clean postgreSQL
         await db_connection.run_sync(BaseModel.metadata.drop_all)
         await db_connection.run_sync(BaseModel.metadata.create_all)
 

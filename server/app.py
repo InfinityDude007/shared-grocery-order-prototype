@@ -15,12 +15,7 @@ Function Logic:
 async def lifespan(app: FastAPI):
     await create_database()
     await setup_database()
-
-    # any other functions that need to execute as the application is started should go here.
-
     yield
-
-    # cleanup operations could go here, if we intend to implement them, to execute after the app shuts down.
 
 
 # create FastAPI app instance and pass lifespan context manager for proper resource management
