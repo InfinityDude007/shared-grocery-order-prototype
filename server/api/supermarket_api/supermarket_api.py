@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Dict, Any
+from sqlalchemy.future import select
+from sqlalchemy import delete
 from server.dependencies import fetch_db_session
-from server.schemas.supermarket_api import ProductData, AllProductsResponse, SuccessResponse
+from server.schemas import ProductData, AllProductsResponse, SuccessResponse
+from server.models import SupermarketProducts
 
 router = APIRouter()
 
@@ -25,38 +27,34 @@ async def fetch_all_products(database: AsyncSession = Depends(fetch_db_session))
     Returns:
     AllProductsResponse: A response containing a list of all available products conforming to AllProductsResponse schema.
     """
+    query_result = await database.execute(select(SupermarketProducts))
+    products = query_result.scalars().all()
 
-    # function logic to be added here
+    products_list = [
+        ProductData(
+            product_id=product.product_id,
+            product_name=product.product_name,
+            product_category=product.product_category,
+            product_price=product.product_price,
+            product_stock=product.product_stock
+        )
+        for product in products
+    ]
 
-    # return mock data for testing route
-    return AllProductsResponse(
-        products=[
-            ProductData(
-                product_id="123",
-                product_name="Tomato Sauce",
-                product_price=5,
-                product_stock=15
-                ),
-            ProductData(
-                product_id="456",
-                product_name="Barbeque Sauce",
-                product_price=7,
-                product_stock=10,
-            )
-        ]
-    )
+    return AllProductsResponse(products=products_list)
 
 
 
-@router.get("/products/{product_id}", response_model=ProductData)
-async def fetch_product(database: AsyncSession = Depends(fetch_db_session)) -> ProductData:
+@router.get("/fetch/{product_id}", response_model=ProductData)
+async def fetch_product(product_id: str, database: AsyncSession = Depends(fetch_db_session)) -> ProductData:
     """
     Function Overview:
     Fetches details of a specific product based on provided product ID.
 
     Function Logic:
     1. Use product_id parameter to query database for product data.
-    2. Return product data wrapped in a ProductData schema.
+    2. If the data cannot be found, raise a 404 Not Found exception,
+       else return product data wrapped in a ProductData schema.
 
     Parameters:
     database (AsyncSession): Database session dependency to interact with database.
@@ -64,90 +62,139 @@ async def fetch_product(database: AsyncSession = Depends(fetch_db_session)) -> P
     Returns:
     ProductData: A response containing details of requested product conforming to ProductResponse schema.
     """
+    query_result = await database.get(SupermarketProducts, product_id)
 
-    # function logic to be added here
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"Product with ID '{product_id}' not found.")
 
-    # return mock data for testing route
     return ProductData(
-        product_id="999",
-        product_name="Tissues",
-        product_price=20,
-        product_stock=18
+        product_id=query_result.product_id,
+        product_name=query_result.product_name,
+        product_category=query_result.product_category,
+        product_price=query_result.product_price,
+        product_stock=query_result.product_stock
     )
 
 
 
-@router.put("/products/update/{product_id}", response_model=SuccessResponse)
-async def update_product(request: ProductData, product_id: int, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.put("/update/{product_id}", response_model=SuccessResponse)
+async def update_product(product_id: str, request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
     """
     Function Overview:
     Updates details of a specific product in database.
 
     Function Logic:
     1. Use product_id to locate existing product in database.
-    2. Apply updates based on incoming request data in ProductData schema.
-    4. Return a success message wrapped in a SuccessResponse schema.
+    2. If the product cannot be found, raise a 404 Not Found exception.
+    3. Check if the requested updates violate uniquness rules for the table,
+       raise a 409 Conflict exception if it is violated..
+    4. Apply updates based on incoming request data in ProductData schema.
+    5. Return a success message wrapped in a SuccessResponse schema.
 
     Parameters:
     request (ProductData): New product data to be updated.
-    product_id (int): ID of the product to be updated.
     database (AsyncSession): Database session dependency to interact with database.
 
     Returns:
     SuccessResponse: A response indicating whether update was successful conforming to SuccessResponse schema.
     """
+    query_result = await database.get(SupermarketProducts, product_id)
 
-    # function logic to be added here
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"Product with ID '{product_id}' not found.")
+    
+    result = await database.execute(select(SupermarketProducts).filter(SupermarketProducts.product_name == request.product_name))
+    product_query_result = result.scalar_one_or_none()
+    id_query_result = await database.get(SupermarketProducts, request.product_id)
 
-    # return mock data for testing route
-    return SuccessResponse(
+    if product_query_result and product_query_result.product_id != product_id:
+        raise HTTPException(status_code=409, detail=f"Product '{request.product_name}' already exists with ID '{product_query_result.product_id}'.")
+    if id_query_result and id_query_result.product_id != product_id:
+        raise HTTPException(status_code=409, detail=f"Product ID '{request.product_id}' already exists for product '{id_query_result.product_name}'.")
+
+    if query_result.product_id == request.product_id:
+        success_response = SuccessResponse(
         action="Update Product Data",
         success=True,
-        message=f"Product information for ID {product_id} updated in database successfully!"
+        message=f"Product information for ID '{product_id}' updated in database successfully!"
+    )
+    else:
+        success_response = SuccessResponse(
+        action="Update Product Data",
+        success=True,
+        message=f"Product information for ID '{product_id}' updated in database successfully, new product ID is '{request.product_id}'."
     )
 
+    query_result.product_id = request.product_id
+    query_result.product_name = request.product_name
+    query_result.product_category = request.product_category
+    query_result.product_price = request.product_price
+    query_result.product_stock = request.product_stock
+
+    await database.commit()
+
+    return success_response
 
 
-@router.post("/products/add/{product_id}", response_model=SuccessResponse)
-async def add_product(request: ProductData, product_id: int, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+
+@router.post("/add", response_model=SuccessResponse)
+async def add_product(request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
     """
     Function Overview:
     Adds a new product to database.
 
     Function Logic:
-    1. Use incoming request data in ProductData schema to create a new product record.
-    2. Insert new product data into database.
-    3. Return a success message wrapped in a SuccessResponse schema.
+    1. Check if the product in the incoming request already exits in the table, or if its requested ID is being used.
+    2. If it exists, raise a 409 Conflict exception,
+       else use incoming request data in ProductData schema to create a new product record.
+    3. Insert new product data into database.
+    4. Return a success message wrapped in a SuccessResponse schema.
 
     Parameters:
     request (ProductData): Product data to be added.
-    product_id (int): ID for the new product.
     database (AsyncSession): Database session dependency to interact with database.
 
     Returns:
     SuccessResponse: A response indicating whether product was added successfully conforming to SuccessResponse schema.
     """
+    id_query_result = await database.get(SupermarketProducts, request.product_id)
+    query_result = await database.execute(select(SupermarketProducts).filter(SupermarketProducts.product_name == request.product_name))
+    product_query_result = query_result.scalar_one_or_none()
 
-    # function logic to be added here
+    if id_query_result:
+        raise HTTPException(status_code=409, detail=f"Product with ID '{request.product_id}' already exists.")
+    elif product_query_result:
+        raise HTTPException(status_code=409, detail=f"Product with name '{request.product_name}' already exists.")
+    
+    add_product = SupermarketProducts(
+        product_id=request.product_id,
+        product_name=request.product_name,
+        product_category=request.product_category,
+        product_price=request.product_price,
+        product_stock=request.product_stock
+    )
 
-    # return mock data for testing route
+    database.add(add_product)
+    await database.commit()
+
     return SuccessResponse(
         action="Add New Product Data",
         success=True,
-        message=f"Product with ID {product_id} added to database successfully!"
+        message=f"Product with ID '{request.product_id}' and name '{request.product_name}' added to database successfully!"
     )
 
 
 
-@router.delete("/products/delete/{product_id}", response_model=SuccessResponse)
-async def delete_product(product_id: int, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.delete("/delete/{product_id}", response_model=SuccessResponse)
+async def delete_product(product_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
     """
     Function Overview:
     Deletes a specific product from database based on provided product ID.
 
     Function Logic:
     1. Use product_id to locate product in database.
-    2. Remove product from database.
+    2. If the product cannot be located, raise a 404 Not Found exception,
+       else remove product from database.
     3. Return a success message wrapped in a SuccessResponse schema.
 
     Parameters:
@@ -157,12 +204,16 @@ async def delete_product(product_id: int, database: AsyncSession = Depends(fetch
     Returns:
     SuccessResponse: A response indicating whether deletion was successful conforming to SuccessResponse schema.
     """
+    query_result = await database.get(SupermarketProducts, product_id)
 
-    # function logic to be added here
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"Product ID '{product_id}' not found.")
 
-    # return mock data for testing route
+    await database.execute(delete(SupermarketProducts).filter(SupermarketProducts.product_id == product_id))
+    await database.commit()
+
     return SuccessResponse(
         action="Delete Product Data",
         success=True,
-        message=f"Product with ID {product_id} deleted from database successfully!"
+        message=f"Product with ID {product_id} and name '{query_result.product_name}' deleted from database successfully!"
     )
