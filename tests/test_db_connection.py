@@ -33,7 +33,7 @@ Returns:
 1. If connection is successful, it yields the async session object to the test.
 2. If connection fails, it raises a pytest failure and includes the error message from the exception.
 """
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def connect_to_db():
     async with session() as session:
         try:

@@ -69,3 +69,17 @@ jobs:
           DATABASE_HOST: postgres
           DATABASE_PORT: 5432
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+
+        # Step 8: Run the pytest script from the tests directory to validate that all tables have been populated correctly
+      - name: Test table population with pytest
+        run: |
+          source venv/bin/activate
+          pytest -s tests/test_table_population.py
+        env:
+          env:
+          # Set environment variables required for database connection from the repo secrets
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_HOST: postgres
+          DATABASE_PORT: 5432
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
