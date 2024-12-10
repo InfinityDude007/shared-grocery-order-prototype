@@ -74,7 +74,7 @@ jobs:
       - name: Test table population with pytest
         run: |
           source venv/bin/activate
-          pytest -s tests/test_table_population.py
+          PYTHONPATH=$(pwd) pytest -s tests/test_table_population.py
         env:
           env:
           # Set environment variables required for database connection from the repo secrets

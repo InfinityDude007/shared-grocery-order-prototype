@@ -42,7 +42,7 @@ Parameters:
 
 Returns:
 - Test passes if the row count for each table matches expected value.
-- If row count does not match, a pytest assertation error is raised and details of the mismatch are provided.
+- If row count does not match, a pytest assertation error is raised with an error message.
 """
 @pytest.mark.asyncio
 @pytest.mark.parametrize("table,expected_rows", [
@@ -54,4 +54,7 @@ async def test_table_population(db_session, table, expected_rows):
     query_result = await db_session.execute(query)
     rows = query_result.scalars().all()
     rows_count = len(rows)
-    assert rows_count == expected_rows, f"Table '{table.__name__}' should have {expected_rows} rows, but the test found {rows_count} rows."
+    if rows_count == expected_rows:
+        print(f"Table '{table.__name__}' has the expected {expected_rows} rows.")
+    else:
+        assert rows_count == expected_rows, f"Table '{table.__name__}' should have {expected_rows} rows, but the test found {rows_count} rows."
