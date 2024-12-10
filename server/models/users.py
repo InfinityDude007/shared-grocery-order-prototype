@@ -9,7 +9,7 @@ class Users(BaseModel):
     user_id = Column(String(5), primary_key=True, unique=True, nullable=False)
     first_name = Column(String(30), nullable=False)
     last_name = Column(String(30), nullable=False)
-    email_id = Column(String(150), unique=True, nullable=False)
+    email_id = Column(String(100), unique=True, nullable=False)
     phone_number = Column(String(15), unique=True, nullable=False)
     accommodation_id = Column(String(5), nullable=True)
 
