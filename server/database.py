@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import os
 from dotenv import load_dotenv
-from .models import BaseModel, SupermarketProducts
-from .models import hardcoded_products
+from .models import BaseModel, SupermarketProducts, Orders
+from .models import hardcoded_products, hardcoded_orders
 
 # load environment variables, extract database connection parameters and construct database URL
 load_dotenv()
@@ -66,6 +66,27 @@ async def insert_product_data(session):
             db_session.add(SupermarketProducts(**product))
         await db_session.commit()
         print("Hardcoded product data inserted into SupermarketProducts table.")
+        
+
+"""
+Function Overview:
+Inserts a list of hardcoded order data into Orders table.
+
+Function Logic:
+1. Open a new database session using provided session.
+2. For each order in hardcoded orders list, create a new Orders record.
+3. Add each new order to the database session.
+4. Commit session to persist the changes.
+
+Parameters:
+session (AsyncSession): The database session used to interact with the database.
+"""
+async def insert_order_data(session):
+    async with session() as db_session:
+        for order in hardcoded_orders:
+            db_session.add(Orders(**order))
+        await db_session.commit()
+        print("Hardcoded order data inserted into Orders table.")
  
 
 """
@@ -79,3 +100,4 @@ Function Logic:
 async def setup_database():
     async with async_engine.begin():
         await insert_product_data(session)
+        await insert_order_data(session)
