@@ -35,13 +35,16 @@ Returns:
 async def query_db(table, expected_rows):
     async with Session() as session:
         try:
-            query_result = await session.execute(select(table))
-            rows = query_result.scalars().all()
-            rows_count = len(rows)
-            check_rows = rows_count == expected_rows
-            return check_rows, rows_count 
+            async with session.begin():
+                query_result = await session.execute(select(table))
+                rows = query_result.scalars().all()
+                rows_count = len(rows)
+                check_rows = rows_count == expected_rows
+                return check_rows, rows_count 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
+        except Exception as e:
+            pytest.fail(f"An error occurred within the test script: {e}")
 
 """
 Test Overview:
