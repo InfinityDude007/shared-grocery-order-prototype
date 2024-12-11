@@ -16,7 +16,7 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
-session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 """
 Test Overview:
@@ -30,12 +30,12 @@ Test logic:
 4. If query fails due, the fixture fails the test and provides an error message.
 
 Returns:
-1. If connection is successful, it yields the async session object to the test.
-2. If connection fails, it raises a pytest failure and includes the error message from the exception.
+- If connection is successful, it yields the async session object to the test.
+- If connection fails, it raises a pytest failure and includes the error message from the exception.
 """
-@pytest.fixture
+@pytest.fixture(scope="module")
 async def connect_to_db():
-    async with session() as session:
+    async with Session() as session:
         try:
             await session.execute('SELECT 1')
             yield session 
