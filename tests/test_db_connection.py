@@ -35,12 +35,13 @@ Returns:
 """
 @pytest.fixture(scope="module")
 async def connect_to_db():
-    async with Session() as session:
-        try:
-            await session.execute('SELECT 1')
-            yield session
-        except OperationalError as e:
-            pytest.fail(f"Database connection failed: {e}")
+    async with async_engine.connect() as connection:
+        async with Session(bind=connection) as session:
+            try:
+                await session.execute('SELECT 1')
+                yield session
+            except OperationalError as e:
+                pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
@@ -57,5 +58,7 @@ Returns:
 """
 @pytest.mark.asyncio
 async def test_db_connection(connect_to_db):
-    assert connect_to_db is not None
+    assert connect_to_db is not None, "400 Bad Request: Database connection was passed as None."
+    query_result = await connect_to_db.execute('SELECT 1')
+    assert query_result is not None, "404 Not Found: Database does not exist or connection failed."
     print("Database connection successful!")
