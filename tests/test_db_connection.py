@@ -17,26 +17,25 @@ async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 """
-Test Overview:
+Function Overview:
 Establishes an async connection to the database and runs a simple query
 to verify if the database is accessible and the connection is functional.
 
-Test logic:
+Logic logic:
 1. Create an async session using the sessionmaker.
 2. Execute basic query to test if connection to the database is successful.
-3. If query executes successfully, the fixture yields the session to the test function.
+3. If query executes successfully, the fixture yields the result to the test function.
 4. If query fails due, the fixture fails the test and provides an error message.
 
 Returns:
-- If connection is successful, it yields the async session object to the test.
+- If connection is successful, it returns the result to the test.
 - If connection fails, it raises a pytest failure and includes the error message from the exception.
 """
-@pytest.fixture(scope="module")
 async def connect_to_db():
     async with Session() as session:
         try:
-            await session.execute('SELECT 1')
-            yield session 
+            query_result = await session.execute('SELECT 1')
+            return query_result 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
 
@@ -54,6 +53,7 @@ Returns:
 - Implicitly returns a pass or fail based on the assertion.
 """
 @pytest.mark.asyncio
-async def test_db_connection(connect_to_db):
-    assert connect_to_db is not None
+async def test_db_connection():
+    query_result = await connect_to_db()
+    assert query_result is not None
     print("Database connection successful!")
