@@ -57,42 +57,50 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Step 7: Build and push Docker image
+      # Step 7: Build and push Docker image with layer caching for faster build and push
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache,mode=max
 
-      # Step 8: Start services with docker-compose
+      # Step 8: Install Docker compose onto pipeline
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Step 9: Start services with docker-compose
       - name: Start services
         run: |
           docker-compose up -d
       
-      # Step 9: Wait for postgres service to be ready
+      # Step 10: Wait for postgres service to be ready
       - name: Wait for database to be ready
         run: |
           until nc -z localhost 5432; do echo "Waiting for database..."; sleep 2; done
 
-      # Step 10: Run database setup script in the virtual environment
+      # Step 11: Run database setup script in the virtual environment
       - name: Run database setup
         run: |
           source venv/bin/activate
           PYTHONPATH=$(pwd) python -m server.database -c "import asyncio; asyncio.run(create_database())"
 
-      # Step 11: Test database connection with pytest in the virtual environment
+      # Step 12: Test database connection with pytest in the virtual environment
       - name: Test database connection with pytest
         run: |
           source venv/bin/activate
           pytest -s tests/test_db_connection.py
 
-      # Step 12: Test table population with pytest in the virtual environment
+      # Step 13: Test table population with pytest in the virtual environment
       - name: Test table population with pytest
         run: |
           source venv/bin/activate
           pytest -s tests/test_table_population.py
 
-      # Step 13: Stop services after the workflow
+      # Step 14: Stop services after the workflow
       - name: Stop docker services
         run: |
           docker-compose down
