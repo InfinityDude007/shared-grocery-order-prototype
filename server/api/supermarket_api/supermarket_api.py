@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from server.dependencies import fetch_db_session
-from server.schemas import ProductData, AllProductsResponse, SuccessResponse
+from server.schemas import ProductData, AllProductsResponse, ProductsSuccessResponse
 from server.models import SupermarketProducts
 
 router = APIRouter()
@@ -77,8 +77,8 @@ async def fetch_product(product_id: str, database: AsyncSession = Depends(fetch_
 
 
 
-@router.put("/update/{product_id}", response_model=SuccessResponse)
-async def update_product(product_id: str, request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.put("/update/{product_id}", response_model=ProductsSuccessResponse)
+async def update_product(product_id: str, request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> ProductsSuccessResponse:
     """
     Function Overview:
     Updates details of a specific product in database.
@@ -89,14 +89,14 @@ async def update_product(product_id: str, request: ProductData, database: AsyncS
     3. Check if the requested updates violate uniquness rules for the table,
        raise a 409 Conflict exception if it is violated..
     4. Apply updates based on incoming request data in ProductData schema.
-    5. Return a success message wrapped in a SuccessResponse schema.
+    5. Return a success message wrapped in a ProductsSuccessResponse schema.
 
     Parameters:
     request (ProductData): New product data to be updated.
     database (AsyncSession): Database session dependency to interact with database.
 
     Returns:
-    SuccessResponse: A response indicating whether update was successful conforming to SuccessResponse schema.
+    ProductsSuccessResponse: A response indicating whether update was successful conforming to ProductsSuccessResponse schema.
     """
     query_result = await database.get(SupermarketProducts, product_id)
 
@@ -113,13 +113,13 @@ async def update_product(product_id: str, request: ProductData, database: AsyncS
         raise HTTPException(status_code=409, detail=f"Product ID '{request.product_id}' already exists for product '{id_query_result.product_name}'.")
 
     if query_result.product_id == request.product_id:
-        success_response = SuccessResponse(
+        success_response = ProductsSuccessResponse(
         action="Update Product Data",
         success=True,
         message=f"Product information for ID '{product_id}' updated in database successfully!"
     )
     else:
-        success_response = SuccessResponse(
+        success_response = ProductsSuccessResponse(
         action="Update Product Data",
         success=True,
         message=f"Product information for ID '{product_id}' updated in database successfully, new product ID is '{request.product_id}'."
@@ -137,8 +137,8 @@ async def update_product(product_id: str, request: ProductData, database: AsyncS
 
 
 
-@router.post("/add", response_model=SuccessResponse)
-async def add_product(request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.post("/add", response_model=ProductsSuccessResponse)
+async def add_product(request: ProductData, database: AsyncSession = Depends(fetch_db_session)) -> ProductsSuccessResponse:
     """
     Function Overview:
     Adds a new product to database.
@@ -148,14 +148,14 @@ async def add_product(request: ProductData, database: AsyncSession = Depends(fet
     2. If it exists, raise a 409 Conflict exception,
        else use incoming request data in ProductData schema to create a new product record.
     3. Insert new product data into database.
-    4. Return a success message wrapped in a SuccessResponse schema.
+    4. Return a success message wrapped in a ProductsSuccessResponse schema.
 
     Parameters:
     request (ProductData): Product data to be added.
     database (AsyncSession): Database session dependency to interact with database.
 
     Returns:
-    SuccessResponse: A response indicating whether product was added successfully conforming to SuccessResponse schema.
+    ProductsSuccessResponse: A response indicating whether product was added successfully conforming to ProductsSuccessResponse schema.
     """
     id_query_result = await database.get(SupermarketProducts, request.product_id)
     query_result = await database.execute(select(SupermarketProducts).filter(SupermarketProducts.product_name == request.product_name))
@@ -177,7 +177,7 @@ async def add_product(request: ProductData, database: AsyncSession = Depends(fet
     database.add(add_product)
     await database.commit()
 
-    return SuccessResponse(
+    return ProductsSuccessResponse(
         action="Add New Product Data",
         success=True,
         message=f"Product with ID '{request.product_id}' and name '{request.product_name}' added to database successfully!"
@@ -185,8 +185,8 @@ async def add_product(request: ProductData, database: AsyncSession = Depends(fet
 
 
 
-@router.delete("/delete/{product_id}", response_model=SuccessResponse)
-async def delete_product(product_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.delete("/delete/{product_id}", response_model=ProductsSuccessResponse)
+async def delete_product(product_id: str, database: AsyncSession = Depends(fetch_db_session)) -> ProductsSuccessResponse:
     """
     Function Overview:
     Deletes a specific product from database based on provided product ID.
@@ -195,14 +195,14 @@ async def delete_product(product_id: str, database: AsyncSession = Depends(fetch
     1. Use product_id to locate product in database.
     2. If the product cannot be located, raise a 404 Not Found exception,
        else remove product from database.
-    3. Return a success message wrapped in a SuccessResponse schema.
+    3. Return a success message wrapped in a ProductsSuccessResponse schema.
 
     Parameters:
     product_id (int): ID of the product to be deleted.
     database (AsyncSession): Database session dependency to interact with database.
 
     Returns:
-    SuccessResponse: A response indicating whether deletion was successful conforming to SuccessResponse schema.
+    ProductsSuccessResponse: A response indicating whether deletion was successful conforming to ProductsSuccessResponse schema.
     """
     query_result = await database.get(SupermarketProducts, product_id)
 
@@ -212,7 +212,7 @@ async def delete_product(product_id: str, database: AsyncSession = Depends(fetch
     await database.execute(delete(SupermarketProducts).filter(SupermarketProducts.product_id == product_id))
     await database.commit()
 
-    return SuccessResponse(
+    return ProductsSuccessResponse(
         action="Delete Product Data",
         success=True,
         message=f"Product with ID {product_id} and name '{query_result.product_name}' deleted from database successfully!"

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from server.dependencies import fetch_db_session
-from server.schemas import UserData, AllUsersResponse, SuccessResponse
+from server.schemas import UserData, AllUsersResponse, UsersSuccessResponse
 from server.models import Users
 
 router = APIRouter()
@@ -77,8 +77,8 @@ async def fetch_user(user_id: str, database: AsyncSession = Depends(fetch_db_ses
         )
 
 
-@router.post("/add", response_model=SuccessResponse)
-async def add_user(request: UserData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.post("/add", response_model=UsersSuccessResponse)
+async def add_user(request: UserData, database: AsyncSession = Depends(fetch_db_session)) -> UsersSuccessResponse:
     """
     Function Overview:
     Adds a new user to the database.
@@ -86,14 +86,14 @@ async def add_user(request: UserData, database: AsyncSession = Depends(fetch_db_
     Function Logic:
     1. Use incoming request data in UserData schema to create a new user record.
     2. Insert new user data into the database.
-    3. Return a success message wrapped in a SuccessResponse schema.
+    3. Return a success message wrapped in a UsersSuccessResponse schema.
 
     Parameters:
     request (UserData): User data to be added.
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating whether the user was added successfully.
+    UsersSuccessResponse: A response indicating whether the user was added successfully.
     """
     id_query_result = await database.get(Users, request.user_id)
     email_query = await database.execute(select(Users).filter(Users.email_id == request.email_id))
@@ -120,15 +120,15 @@ async def add_user(request: UserData, database: AsyncSession = Depends(fetch_db_
     database.add(add_user)
     await database.commit()
 
-    return SuccessResponse(
+    return UsersSuccessResponse(
         action="Add New User Data",
         success=True,
         message=f"User with ID '{request.user_id}' and name '{request.first_name} {request.last_name}' added to database successfully!"
     )
 
 
-@router.put("/update/{user_id}", response_model=SuccessResponse)
-async def update_user(user_id: str, request: UserData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.put("/update/{user_id}", response_model=UsersSuccessResponse)
+async def update_user(user_id: str, request: UserData, database: AsyncSession = Depends(fetch_db_session)) -> UsersSuccessResponse:
     """
     Function Overview:
     Updates details of a specific user in the database.
@@ -136,7 +136,7 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
     Function Logic:
     1. Use the user_id to locate the existing user in the database.
     2. Apply updates based on incoming request data in UserData schema.
-    3. Return a success message wrapped in a SuccessResponse schema.
+    3. Return a success message wrapped in a UsersSuccessResponse schema.
 
     Parameters:
     user_id (str): ID of the user to update.
@@ -144,7 +144,7 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating whether the update was successful.
+    UsersSuccessResponse: A response indicating whether the update was successful.
     """
     query_result = await database.get(Users, user_id)
 
@@ -165,13 +165,13 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
         raise HTTPException(status_code=409, detail=f"User ID '{request.user_id}' already exists for email ID '{id_query_result.email_id}'.")
 
     if query_result.user_id == request.user_id:
-        success_response = SuccessResponse(
+        success_response = UsersSuccessResponse(
         action="Update User Data",
         success=True,
         message=f"User data for ID '{user_id}' updated in database successfully!"
     )
     else:
-        success_response = SuccessResponse(
+        success_response = UsersSuccessResponse(
         action="Update User Data",
         success=True,
         message=f"User data for ID '{user_id}' updated in database successfully, new user ID is '{request.user_id}'."
@@ -189,8 +189,8 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
     return success_response
 
 
-@router.delete("/delete/{user_id}", response_model=SuccessResponse)
-async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.delete("/delete/{user_id}", response_model=UsersSuccessResponse)
+async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_session)) -> UsersSuccessResponse:
     """
     Function Overview:
     Deletes a specific user from the database based on the provided user ID.
@@ -198,14 +198,14 @@ async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_se
     Function Logic:
     1. Use the user_id to locate the user in the database.
     2. Remove the user from the database.
-    3. Return a success message wrapped in a SuccessResponse schema.
+    3. Return a success message wrapped in a UsersSuccessResponse schema.
 
     Parameters:
     user_id (str): ID of the user to delete.
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating whether the deletion was successful.
+    UsersSuccessResponse: A response indicating whether the deletion was successful.
     """
     query_result = await database.get(Users, user_id)
 
@@ -215,7 +215,7 @@ async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_se
     await database.execute(delete(Users).filter(Users.user_id == user_id))
     await database.commit()
 
-    return SuccessResponse(
+    return UsersSuccessResponse(
         action="Delete User Data",
         success=True,
         message=f"User with ID '{user_id}' and email ID '{query_result.email_id}' deleted from database successfully!"

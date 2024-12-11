@@ -17,7 +17,7 @@ class AllProductsResponse(BaseModel):
 
 
 # schema for showing the outcome of a put, post or delete request
-class SuccessResponse(BaseModel):
+class ProductsSuccessResponse(BaseModel):
     action: Literal['Update Product Data', 'Add New Product Data', 'Delete Product Data']
     success: bool
     message: str
