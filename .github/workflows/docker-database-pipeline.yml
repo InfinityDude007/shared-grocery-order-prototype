@@ -1,0 +1,107 @@
+name: Docker and Database CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - 'main'
+      - '*-implementation'
+      - '*-integration'
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  docker-and-database-setup:
+    runs-on: ubuntu-latest
+
+    # Expose env variables from github actions secrets for use in job steps
+    env:
+        DATABASE_USER: ${{ secrets.DATABASE_USER }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+        DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Step 3: Create and activate a virtual environment
+      - name: Set up virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+      
+      # Step 4: Install requirements in the virtual environment
+      - name: Install requirements
+        run: |
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r server/requirements.txt
+
+      # Step 5: Set up Docker Buildx
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 6: Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # Step 7: Build and push Docker image with layer caching for faster build and push
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache,mode=max
+
+      # Step 8: Install Docker compose onto pipeline and create a .env file
+      - name: Set up Docker compose and create .env
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+          cp .env.example .env
+
+      # Step 9: Start services with docker-compose
+      - name: Start services
+        run: |
+          docker-compose up -d
+      
+      # Step 10: Wait for postgres service to be ready
+      - name: Wait for database to be ready
+        run: |
+          timeout 300 bash -c 'until nc -z localhost 5432; do echo "Waiting for database..."; sleep 2; done'
+
+      # Step 11: Run database setup script in the virtual environment
+      - name: Run database setup
+        run: |
+          source venv/bin/activate
+          PYTHONPATH=$(pwd) python -m server.database -c "import asyncio; asyncio.run(create_database())"
+
+      # Step 12: Test database connection with pytest in the virtual environment
+      - name: Test database connection with pytest
+        run: |
+          source venv/bin/activate
+          PYTHONPATH=$(pwd) pytest -s tests/test_db_connection.py
+
+      # Step 13: Test table population with pytest in the virtual environment
+      - name: Test table population with pytest
+        run: |
+          source venv/bin/activate
+          PYTHONPATH=$(pwd) pytest -s tests/test_table_population.py
+          
+      # Step 14: Stop services after the workflow
+      - name: Stop docker services
+        run: |
+          docker-compose down --volumes --remove-orphans

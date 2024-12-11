@@ -6,6 +6,7 @@ from typing import List, Literal
 class ProductData(BaseModel):
     product_id: str
     product_name: str
+    product_category: str
     product_price: float
     product_stock: int
 

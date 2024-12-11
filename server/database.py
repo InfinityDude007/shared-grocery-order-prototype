@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import os
 from dotenv import load_dotenv
-from .models import BaseModel, SupermarketProducts, Users
-from .models import hardcoded_products, hardcoded_users
+from .models import BaseModel, SupermarketProducts, Users, Orders
+from .models import hardcoded_products, hardcoded_users, hardcoded_orders
 
 # load environment variables, extract database connection parameters and construct database URL
 load_dotenv()
@@ -18,6 +18,7 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
 session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+
 
 """
 Function Overview:
@@ -43,8 +44,6 @@ async def create_database():
         await connection.close()
 
     async with async_engine.begin() as db_connection:
-        # potentially create this as a seperate function and move into asyccontextmanager in app.py
-        # also consider instead dropping entire database to leave behind a clean postgreSQL
         await db_connection.run_sync(BaseModel.metadata.drop_all)
         await db_connection.run_sync(BaseModel.metadata.create_all)
 
@@ -68,8 +67,8 @@ async def insert_product_data(session):
             db_session.add(SupermarketProducts(**product))
         await db_session.commit()
         print("Hardcoded product data inserted into SupermarketProducts table.")
-
-
+        
+        
 """
 Function Overview:
 Inserts a list of hardcoded user data into Users table.
@@ -89,8 +88,29 @@ async def insert_user_data(session):
             db_session.add(Users(**user))
         await db_session.commit()
         print("Hardcoded user data inserted into Users table.")
+        
 
+"""
+Function Overview:
+Inserts a list of hardcoded order data into Orders table.
 
+Function Logic:
+1. Open a new database session using provided session.
+2. For each order in hardcoded orders list, create a new Orders record.
+3. Add each new order to the database session.
+4. Commit session to persist the changes.
+
+Parameters:
+session (AsyncSession): The database session used to interact with the database.
+"""
+async def insert_order_data(session):
+    async with session() as db_session:
+        for order in hardcoded_orders:
+            db_session.add(Orders(**order))
+        await db_session.commit()
+        print("Hardcoded order data inserted into Orders table.")
+
+        
 """
 Function Overview:
 Sets up database by inserting hardcoded data into SupermarketProducts table.
@@ -103,3 +123,4 @@ async def setup_database():
     async with async_engine.begin():
         await insert_product_data(session)
         await insert_user_data(session)
+        await insert_order_data(session)
