@@ -66,11 +66,12 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/shared-grocery-order-prototype:cache,mode=max
 
-      # Step 8: Install Docker compose onto pipeline
-      - name: Set up Docker Compose
+      # Step 8: Install Docker compose onto pipeline and create a .env file
+      - name: Set up Docker compose and create .env
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
+          cp .env.example .env
 
       # Step 9: Start services with docker-compose
       - name: Start services
