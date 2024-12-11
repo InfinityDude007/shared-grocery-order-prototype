@@ -81,7 +81,7 @@ jobs:
       # Step 10: Wait for postgres service to be ready
       - name: Wait for database to be ready
         run: |
-          until nc -z localhost 5432; do echo "Waiting for database..."; sleep 2; done
+          timeout 300 bash -c 'until nc -z localhost 5432; do echo "Waiting for database..."; sleep 2; done'
 
       # Step 11: Run database setup script in the virtual environment
       - name: Run database setup
@@ -93,15 +93,15 @@ jobs:
       - name: Test database connection with pytest
         run: |
           source venv/bin/activate
-          pytest -s tests/test_db_connection.py
+          PYTHONPATH=$(pwd)/server pytest -s tests/test_db_connection.py
 
       # Step 13: Test table population with pytest in the virtual environment
       - name: Test table population with pytest
         run: |
           source venv/bin/activate
-          pytest -s tests/test_table_population.py
-
+          PYTHONPATH=$(pwd)/server pytest -s tests/test_table_population.py
+          
       # Step 14: Stop services after the workflow
       - name: Stop docker services
         run: |
-          docker-compose down
+          docker-compose down --volumes --remove-orphans
