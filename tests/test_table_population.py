@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
 from dotenv import load_dotenv
-from server.models import BaseModel, SupermarketProducts # continue adding new tables here
+from server.models import SupermarketProducts # continue adding new tables here
 
 # load environment variables, extract database connection parameters and construct database URL
 load_dotenv()
@@ -21,25 +21,19 @@ async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 """
-Test Overview:
+Function Overview:
 Establishes an async connection to the database and runs queries to gather and count all rows in a database table.
 
-Test logic:
-1. Parameterize the test with tables and their expected row counts.
-2. Create an async session using the sessionmaker.
-3. Execute query to fetch all rows from specified table and count number of rows returned.
-4. Check if row count matches expected value for that table.
-5. Yields result to the test function
+Function logic:
+1. Create an async session using the sessionmaker.
+2. Execute query to fetch all rows from specified table and count number of rows returned.
+3. Check if row count matches expected value for that table.
+4. Return result to the test fixture
 
 Returns:
-- Yields a boolean indicating if row count matches expected value, along with table, expected row count, and actual row count.
+- Yields a boolean indicating if row count matches expected value and actual row count.
 - If query fails, a pytest failure is raised with an error message.
 """
-@pytest.fixture(scope="module")
-@pytest.mark.parametrize("table,expected_rows", [
-    (SupermarketProducts, 20),
-    # continue adding new tables here
-])
 async def query_db(table, expected_rows):
     async with Session() as session:
         try:
@@ -47,17 +41,17 @@ async def query_db(table, expected_rows):
             rows = query_result.scalars().all()
             rows_count = len(rows)
             check_rows = rows_count == expected_rows
-            yield check_rows, table, expected_rows, rows_count 
+            return check_rows, rows_count 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
-Validates that tables in the database are populated with the expected number of rows,
-using parameterization to check tables and their expected row counts.
+Validates that tables in the database are populated with expected number of rows,
+using parameterization and query_db function to check tables and their expected row counts.
 
 Test logic:
-1. Use query_db fixture to execute query and check the row count for each specified table.
+1. Use query_db to execute query and check row count for each specified table.
 2. Check bool returned by query_db fixture, and return corresponding message.
 
 Parameters:
@@ -68,8 +62,12 @@ Returns:
 -  A message detailing if table passed check, or if it failed and why.
 """
 @pytest.mark.asyncio
-async def test_table_population(query_db):
-    check_rows, table, expected_rows, rows_count = query_db
+@pytest.mark.parametrize("table,expected_rows", [
+    (SupermarketProducts, 20),
+    # continue adding new tables here
+])
+async def test_table_population(table, expected_rows):
+    check_rows, rows_count = await query_db(table, expected_rows)
     assert check_rows, (
-            f"Table '{table.__name__}' should have {expected_rows} rows, but check found {rows_count} rows.")
-    print (f"Table '{table.__name__}' has the expected {expected_rows} rows.")
+            f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
+    print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
