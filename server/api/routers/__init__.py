@@ -3,4 +3,4 @@ from .users_routers import router as users_router
 
 router = APIRouter()
 
-router.include_router(users_routers, tags="Users")
+router.include_router(users_router, tags="Users")
