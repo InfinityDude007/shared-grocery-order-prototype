@@ -7,3 +7,6 @@
 # server files
 /db-init
 __pycache__/
+
+# pytest cache files
+/.pytest_cache

@@ -8,4 +8,7 @@
 # documentation files
 *.md
 
+# pytest cache files
+/.pytest_cache
+
 .dockerignore
