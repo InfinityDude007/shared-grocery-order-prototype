@@ -3,10 +3,8 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
-from dotenv import load_dotenv
 
 # load environment variables, extract database connection parameters and construct database URL
-load_dotenv()
 USERNAME = os.getenv('DATABASE_USER')
 PASSWORD = os.getenv('DATABASE_PASSWORD')
 HOST = os.getenv('DATABASE_HOST')
