@@ -166,13 +166,13 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
 
     if query_result.user_id == request.user_id:
         success_response = SuccessResponse(
-        action="Update Product Data",
+        action="Update User Data",
         success=True,
         message=f"User data for ID '{user_id}' updated in database successfully!"
     )
     else:
         success_response = SuccessResponse(
-        action="Update Product Data",
+        action="Update User Data",
         success=True,
         message=f"User data for ID '{user_id}' updated in database successfully, new user ID is '{request.user_id}'."
     )
@@ -207,8 +207,6 @@ async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_se
     Returns:
     SuccessResponse: A response indicating whether the deletion was successful.
     """
-@router.delete("/delete/{user_id}", response_model=SuccessResponse)
-async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
     query_result = await database.get(Users, user_id)
 
     if not query_result:
