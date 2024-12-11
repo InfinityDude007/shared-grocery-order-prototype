@@ -36,12 +36,11 @@ Returns:
 @pytest.fixture(scope="module")
 async def connect_to_db():
     async with async_engine.connect() as connection:
-        async with Session(bind=connection) as session:
-            try:
-                await session.execute('SELECT 1')
-                yield session
-            except OperationalError as e:
-                pytest.fail(f"Database connection failed: {e}")
+        try:
+            connection.execute('SELECT 1')
+            yield connection
+        except OperationalError as e:
+            pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:

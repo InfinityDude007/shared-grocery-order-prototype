@@ -20,16 +20,15 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
-# set up an async database session fixture to interact with the database and provide the session to test functions
+# set up and return an async database connection to interact with the database and provide the session to test functions
 @pytest.fixture(scope="module")
 async def connect_to_db():
     async with async_engine.connect() as connection:
-        async with Session(bind=connection) as session:
-            try:
-                await session.execute('SELECT 1')
-                yield session
-            except OperationalError as e:
-                pytest.fail(f"Database connection failed: {e}")
+        try:
+            await connection.execute('SELECT 1')
+            yield connection
+        except OperationalError as e:
+            pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
@@ -57,8 +56,7 @@ Returns:
 ])
 async def test_table_population(connect_to_db, table, expected_rows):
     try:
-        query = select(table)
-        query_result = await connect_to_db.execute(query)
+        query_result = await connect_to_db.execute(select(table))
         rows = query_result.scalars().all()
         rows_count = len(rows)
         assert rows_count == expected_rows, (
