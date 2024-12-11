@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Literal
 
 
 class UserData(BaseModel):
@@ -16,6 +16,6 @@ class AllUsersResponse(BaseModel):
 
 
 class SuccessResponse(BaseModel):
-    action: str
+    action: Literal['Update User Data', 'Add New User Data', 'Delete User Data']
     success: bool
     message: str

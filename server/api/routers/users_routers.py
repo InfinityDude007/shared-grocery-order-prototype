@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from sqlalchemy.future import select
+from sqlalchemy import delete
 from server.dependencies import fetch_db_session
 from server.schemas import UserData, AllUsersResponse, SuccessResponse
+from server.models import Users
 
 router = APIRouter()
+
 
 
 @router.get("/all", response_model=AllUsersResponse)
@@ -24,29 +27,22 @@ async def fetch_all_users(database: AsyncSession = Depends(fetch_db_session)) ->
     Returns:
     AllUsersResponse: A response containing a list of all users.
     """
-    # function logic to be added here
+    query_result = await database.execute(select(Users))
+    users = query_result.scalars().all()
 
-    # return mock data for testing route
-    return AllUsersResponse(
-        users=[
-            UserData(
-                user_id="1001",
-                first_name="John",
-                last_name="Doe",
-                email_id="john.doe@example.com",
-                phone_number="+971501234567",
-                accommodation_id="1001"
-            ),
-            UserData(
-                user_id="1002",
-                first_name="Jane",
-                last_name="Smith",
-                email_id="jane.smith@example.com",
-                phone_number="+971502345678",
-                accommodation_id="1002"
-            )
-        ]
-    )
+    users_list = [
+        UserData(
+            user_id=user.user_id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email_id=user.email_id,
+            phone_number=user.phone_number,
+            accommodation_id=user.accommodation_id,
+        )
+        for user in users
+    ]
+    
+    return AllUsersResponse(users=users_list)
 
 
 @router.get("/{user_id}", response_model=UserData)
@@ -66,17 +62,19 @@ async def fetch_user(user_id: str, database: AsyncSession = Depends(fetch_db_ses
     Returns:
     UserData: Details of the requested user.
     """
-    # function logic to be added here
-
-    # return mock data for testing route
+    query_result = await database.get(Users, user_id)
+    
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"User with ID '{user_id}' not found.")
+    
     return UserData(
-        user_id="1001",
-        first_name="John",
-        last_name="Doe",
-        email_id="john.doe@example.com",
-        phone_number="+971501234567",
-        accommodation_id="1001"
-    )
+            user_id=query_result.user_id,
+            first_name=query_result.first_name,
+            last_name=query_result.last_name,
+            email_id=query_result.email_id,
+            phone_number=query_result.phone_number,
+            accommodation_id=query_result.accommodation_id,
+        )
 
 
 @router.post("/add", response_model=SuccessResponse)
@@ -97,13 +95,35 @@ async def add_user(request: UserData, database: AsyncSession = Depends(fetch_db_
     Returns:
     SuccessResponse: A response indicating whether the user was added successfully.
     """
-    # function logic to be added here
+    id_query_result = await database.get(Users, request.user_id)
+    email_query = await database.execute(select(Users).filter(Users.email_id == request.email_id))
+    email_query_result = email_query.scalar_one_or_none()
+    phone_query = await database.execute(select(Users).filter(Users.phone_number == request.phone_number))
+    phone_query_result = phone_query.scalar_one_or_none()
 
-    # return mock data for testing route
+    if id_query_result:
+        raise HTTPException(status_code=409, detail=f"User with ID '{request.user_id}' already exists.")
+    elif email_query_result:
+        raise HTTPException(status_code=409, detail=f"User with email ID '{request.email_id}' already exists.")
+    elif phone_query_result:
+        raise HTTPException(status_code=409, detail=f"User with phone number '{request.phone_number}' already exists.")
+
+    add_user = Users(
+        user_id=request.user_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+        email_id=request.email_id,
+        phone_number=request.phone_number,
+        accommodation_id=request.accommodation_id,
+    )
+
+    database.add(add_user)
+    await database.commit()
+
     return SuccessResponse(
-        action="Add New User",
+        action="Add New User Data",
         success=True,
-        message=f"User with ID {request.user_id} added successfully!"
+        message=f"User with ID '{request.user_id}' and name '{request.first_name} {request.last_name}' added to database successfully!"
     )
 
 
@@ -126,14 +146,47 @@ async def update_user(user_id: str, request: UserData, database: AsyncSession = 
     Returns:
     SuccessResponse: A response indicating whether the update was successful.
     """
-    # function logic to be added here
+    query_result = await database.get(Users, user_id)
 
-    # return mock data for testing route
-    return SuccessResponse(
-        action="Update User",
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"User with ID '{user_id}' not found.")
+    
+    email_query = await database.execute(select(Users).filter(Users.email_id == request.email_id))
+    email_query_result = email_query.scalar_one_or_none()
+    phone_query = await database.execute(select(Users).filter(Users.phone_number == request.phone_number))
+    phone_query_result = phone_query.scalar_one_or_none()
+    id_query_result = await database.get(Users, request.user_id)
+
+    if email_query_result and email_query_result.user_id != user_id:
+        raise HTTPException(status_code=409, detail=f"Email ID '{request.email_id}' already used with user ID '{email_query_result.user_id}'.")
+    if phone_query_result and phone_query_result.user_id != user_id:
+        raise HTTPException(status_code=409, detail=f"Phone number '{request.phone_number}' already used with user ID '{phone_query_result.user_id}'.")
+    if id_query_result and id_query_result.user_id != user_id:
+        raise HTTPException(status_code=409, detail=f"User ID '{request.user_id}' already exists for email ID '{id_query_result.email_id}'.")
+
+    if query_result.user_id == request.user_id:
+        success_response = SuccessResponse(
+        action="Update Product Data",
         success=True,
-        message=f"User with ID {user_id} updated successfully!"
+        message=f"User data for ID '{user_id}' updated in database successfully!"
     )
+    else:
+        success_response = SuccessResponse(
+        action="Update Product Data",
+        success=True,
+        message=f"User data for ID '{user_id}' updated in database successfully, new user ID is '{request.user_id}'."
+    )
+
+    query_result.user_id = request.user_id
+    query_result.first_name = request.first_name
+    query_result.last_name = request.last_name
+    query_result.email_id = request.email_id
+    query_result.phone_number = request.phone_number
+    query_result.accommodation_id = request.accommodation_id
+
+    await database.commit()
+
+    return success_response
 
 
 @router.delete("/delete/{user_id}", response_model=SuccessResponse)
@@ -154,11 +207,18 @@ async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_se
     Returns:
     SuccessResponse: A response indicating whether the deletion was successful.
     """
-    # function logic to be added here
+@router.delete("/delete/{user_id}", response_model=SuccessResponse)
+async def delete_user(user_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+    query_result = await database.get(Users, user_id)
 
-    # return mock data for testing route
+    if not query_result:
+        raise HTTPException(status_code=404, detail=f"User ID '{user_id}' not found.")
+
+    await database.execute(delete(Users).filter(Users.user_id == user_id))
+    await database.commit()
+
     return SuccessResponse(
-        action="Delete User",
+        action="Delete User Data",
         success=True,
-        message=f"User with ID {user_id} deleted successfully!"
+        message=f"User with ID '{user_id}' and email ID '{query_result.email_id}' deleted from database successfully!"
     )
