@@ -23,12 +23,13 @@ Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False
 # set up an async database session fixture to interact with the database and provide the session to test functions
 @pytest.fixture(scope="module")
 async def connect_to_db():
-    async with Session() as session:
-        try:
-            await session.execute('SELECT 1')
-            yield session
-        except OperationalError as e:
-            pytest.fail(f"Database connection failed: {e}")
+    async with async_engine.connect() as connection:
+        async with Session(bind=connection) as session:
+            try:
+                await session.execute('SELECT 1')
+                yield session
+            except OperationalError as e:
+                pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
