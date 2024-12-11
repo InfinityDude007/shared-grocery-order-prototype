@@ -16,7 +16,7 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
-Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 """
 Test Overview:
@@ -33,12 +33,12 @@ Returns:
 1. If connection is successful, it yields the async session object to the test.
 2. If connection fails, it raises a pytest failure and includes the error message from the exception.
 """
-@pytest.fixture(scope="module")
+@pytest.fixture
 async def connect_to_db():
-    async with async_engine.connect() as connection:
+    async with session() as session:
         try:
-            connection.execute('SELECT 1')
-            yield connection
+            await session.execute('SELECT 1')
+            yield session 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
 
@@ -57,7 +57,5 @@ Returns:
 """
 @pytest.mark.asyncio
 async def test_db_connection(connect_to_db):
-    assert connect_to_db is not None, "400 Bad Request: Database connection was passed as None."
-    query_result = await connect_to_db.execute('SELECT 1')
-    assert query_result is not None, "404 Not Found: Database does not exist or connection failed."
+    assert connect_to_db is not None
     print("Database connection successful!")
