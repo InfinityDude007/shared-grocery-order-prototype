@@ -20,49 +20,56 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
-# set up and return an async database connection to interact with the database and provide the session to test functions
+"""
+Test Overview:
+Establishes an async connection to the database and runs queries to gather and count all rows in a database table.
+
+Test logic:
+1. Parameterize the test with tables and their expected row counts.
+2. Create an async session using the sessionmaker.
+3. Execute query to fetch all rows from specified table and count number of rows returned.
+4. Check if row count matches expected value for that table.
+5. Yields result to the test function
+
+Returns:
+- Yields a boolean indicating if row count matches expected value, along with table, expected row count, and actual row count.
+- If query fails, a pytest failure is raised with an error message.
+"""
 @pytest.fixture(scope="module")
-async def connect_to_db():
-    async with async_engine.connect() as connection:
+@pytest.mark.parametrize("table,expected_rows", [
+    (SupermarketProducts, 20),
+    # continue adding new tables here
+])
+async def query_db(table, expected_rows):
+    async with Session() as session:
         try:
-            await connection.execute('SELECT 1')
-            yield connection
+            query_result = await session.execute(select(table))
+            rows = query_result.scalars().all()
+            rows_count = len(rows)
+            check_rows = rows_count == expected_rows
+            yield check_rows, table, expected_rows, rows_count 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
-Validates that tables in database are populated with the expected number of rows,
-using parameterization to check tables and expected row counts.
+Validates that tables in the database are populated with the expected number of rows,
+using parameterization to check tables and their expected row counts.
 
 Test logic:
-1. Parameterize test with tables and their expected row counts.
-2. Execute query to retrieve all rows from each specified table.
-3. Compare number of rows in each table to expected number of rows.
-4. Raise assertion error if row count does not match expected number of rows.
+1. Use query_db fixture to execute query and check the row count for each specified table.
+2. Check bool returned by query_db fixture, and return corresponding message.
 
 Parameters:
-- table: Table model to query.
-- expected_rows: Expected number of rows in table.
+- table: Table model being queried.
+- expected_rows: Expected number of rows for table being queried.
 
 Returns:
-- Test passes if the row count for each table matches expected value.
-- If row count does not match, a pytest assertation error is raised with an error message.
+-  A message detailing if table passed check, or if it failed and why.
 """
 @pytest.mark.asyncio
-@pytest.mark.parametrize("table,expected_rows", [
-    (SupermarketProducts, 20),
-    # continue adding new tables here
-])
-async def test_table_population(connect_to_db, table, expected_rows):
-    try:
-        query_result = await connect_to_db.execute(select(table))
-        rows = query_result.scalars().all()
-        rows_count = len(rows)
-        assert rows_count == expected_rows, (
-            f"Table '{table.__name__}' should have {expected_rows} rows, "
-            f"but check found {rows_count} rows."
-        )
-        print(f"Table '{table.__name__}' has the expected {expected_rows} rows.")
-    except OperationalError as e:
-        pytest.fail(f"Failed to query table '{table.__name__}': {e}")
+async def test_table_population(query_db):
+    check_rows, table, expected_rows, rows_count = query_db
+    assert check_rows, (
+            f"Table '{table.__name__}' should have {expected_rows} rows, but check found {rows_count} rows.")
+    print (f"Table '{table.__name__}' has the expected {expected_rows} rows.")
