@@ -3,6 +3,7 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
+from sqlalchemy.exc import OperationalError
 from dotenv import load_dotenv
 from server.models import BaseModel, SupermarketProducts # continue adding new tables here
 
@@ -21,9 +22,13 @@ Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False
 
 # set up an async database session fixture to interact with the database and provide the session to test functions
 @pytest.fixture(scope="module")
-async def db_session():
+async def connect_to_db():
     async with Session() as session:
-        yield session
+        try:
+            await session.execute('SELECT 1')
+            yield session
+        except OperationalError as e:
+            pytest.fail(f"Database connection failed: {e}")
 
 """
 Test Overview:
@@ -49,12 +54,16 @@ Returns:
     (SupermarketProducts, 20),
     # continue adding new tables here
 ])
-async def test_table_population(db_session, table, expected_rows):
-    query = select(table)
-    query_result = await db_session.execute(query)
-    rows = query_result.scalars().all()
-    rows_count = len(rows)
-    if rows_count == expected_rows:
+async def test_table_population(connect_to_db, table, expected_rows):
+    try:
+        query = select(table)
+        query_result = await connect_to_db.execute(query)
+        rows = query_result.scalars().all()
+        rows_count = len(rows)
+        assert rows_count == expected_rows, (
+            f"Table '{table.__name__}' should have {expected_rows} rows, "
+            f"but check found {rows_count} rows."
+        )
         print(f"Table '{table.__name__}' has the expected {expected_rows} rows.")
-    else:
-        assert rows_count == expected_rows, f"Table '{table.__name__}' should have {expected_rows} rows, but the test found {rows_count} rows."
+    except OperationalError as e:
+        pytest.fail(f"Failed to query table '{table.__name__}': {e}")
