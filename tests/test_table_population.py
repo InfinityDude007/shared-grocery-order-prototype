@@ -17,12 +17,12 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
-session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 # set up an async database session fixture to interact with the database and provide the session to test functions
 @pytest.fixture(scope="module")
 async def db_session():
-    async with session() as session:
+    async with Session() as session:
         yield session
 
 """

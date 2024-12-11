@@ -16,7 +16,7 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
-session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 """
 Test Overview:
@@ -35,10 +35,10 @@ Returns:
 """
 @pytest.fixture(scope="module")
 async def connect_to_db():
-    async with session() as session:
+    async with Session() as session:
         try:
             await session.execute('SELECT 1')
-            yield session 
+            yield session
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
 
