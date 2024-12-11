@@ -3,6 +3,7 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.sql import text
 
 # load environment variables, extract database connection parameters and construct database URL
 USERNAME = os.getenv('DATABASE_USER')
@@ -34,7 +35,7 @@ Returns:
 async def connect_to_db():
     async with Session() as session:
         try:
-            query_result = await session.execute('SELECT 1')
+            query_result = await session.execute(text('SELECT 1'))
             return query_result 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
