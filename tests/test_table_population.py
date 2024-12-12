@@ -1,7 +1,7 @@
 import os
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, close_all_sessions
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
 from server.models import SupermarketProducts, Users, Orders # continue adding new tables here
@@ -32,7 +32,8 @@ async def new_session():
 ])
 async def test_table_population(new_session, table, expected_rows):
     try:
-        query_result = await new_session.execute(select(table))
+        session = await new_session()
+        query_result = await session.execute(select(table))
         rows = query_result.scalars().all()
         rows_count = len(rows)
         check_rows = rows_count == expected_rows
