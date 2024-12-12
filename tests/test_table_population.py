@@ -36,5 +36,3 @@ async def test_table_population(table, expected_rows):
             pytest.fail(f"Database connection failed: {e}")
         except Exception as e:
             pytest.fail(f"An error occurred within the test script: {e}")
-        yield
-        await async_engine.dispose()
