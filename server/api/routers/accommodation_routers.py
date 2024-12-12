@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from server.dependencies import fetch_db_session
-from server.schemas import AllAccommodationsResponse,AccommodationSuccessResponse ,AccommodationData
+from server.schemas import AllAccommodationsResponse, AccommodationSuccessResponse, AccommodationData
 from server.models import Accommodation
 
 router = APIRouter()
