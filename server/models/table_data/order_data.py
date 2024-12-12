@@ -9,16 +9,16 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 35.0, 
         "delivery_fee": 15.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O002", 
         "accommodation_id": "A002", 
         "creation_date": datetime(2024, 12, 1, 10, 45, 30), 
         "order_status": "Completed", 
-        "items_cost": 24.0, 
+        "items_cost": 23.0, 
         "delivery_fee": 10.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O003", 
@@ -27,7 +27,7 @@ hardcoded_orders = [
         "order_status": "Cancelled", 
         "items_cost": 23.0, 
         "delivery_fee": 8.5, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O004", 
@@ -36,7 +36,7 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 42.9, 
         "delivery_fee": 12.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O005", 
@@ -45,7 +45,7 @@ hardcoded_orders = [
         "order_status": "Completed", 
         "items_cost": 31.2, 
         "delivery_fee": 9.75, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O006", 
@@ -54,7 +54,7 @@ hardcoded_orders = [
         "order_status": "Cancelled", 
         "items_cost": 25.0, 
         "delivery_fee": 14.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O007", 
@@ -63,7 +63,7 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 18.0, 
         "delivery_fee": 7.5, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O008", 
@@ -72,7 +72,7 @@ hardcoded_orders = [
         "order_status": "Completed", 
         "items_cost": 15.6, 
         "delivery_fee": 6.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O009", 
@@ -81,7 +81,7 @@ hardcoded_orders = [
         "order_status": "Cancelled", 
         "items_cost": 35.0, 
         "delivery_fee": 11.25, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O010", 
@@ -90,7 +90,7 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 50.0, 
         "delivery_fee": 13.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O011", 
@@ -99,7 +99,7 @@ hardcoded_orders = [
         "order_status": "Completed", 
         "items_cost": 40.5, 
         "delivery_fee": 10.5, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O012", 
@@ -108,7 +108,7 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 30.0, 
         "delivery_fee": 9.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O013", 
@@ -117,7 +117,7 @@ hardcoded_orders = [
         "order_status": "Cancelled", 
         "items_cost": 22.4, 
         "delivery_fee": 7.25, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O014", 
@@ -126,7 +126,7 @@ hardcoded_orders = [
         "order_status": "Completed", 
         "items_cost": 24.9, 
         "delivery_fee": 8.0, 
-        "order_total": None
+        "order_total":  0.0
     },
     {
         "order_id": "O015", 
@@ -135,6 +135,6 @@ hardcoded_orders = [
         "order_status": "Pending", 
         "items_cost": 44.8, 
         "delivery_fee": 14.5, 
-        "order_total": None
+        "order_total":  0.0
     },
 ]

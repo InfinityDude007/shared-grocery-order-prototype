@@ -106,6 +106,7 @@ session (AsyncSession): The database session used to interact with the database.
 async def insert_order_data(session):
     async with session() as db_session:
         for order in hardcoded_orders:
+            order["order_total"] = order["items_cost"] + order["delivery_fee"]
             db_session.add(Orders(**order))
         await db_session.commit()
         print("Hardcoded order data inserted into Orders table.")

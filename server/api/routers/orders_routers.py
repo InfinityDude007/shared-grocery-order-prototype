@@ -129,7 +129,7 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
     query_result.order_status = request.order_status
     query_result.items_cost = request.items_cost
     query_result.delivery_fee = request.delivery_fee
-    query_result.order_total = request.order_total
+    query_result.order_total = request.items_cost+request.delivery_fee
 
     await database.commit()
 
@@ -168,7 +168,7 @@ async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_d
         order_status=request.order_status,
         items_cost=request.items_cost,
         delivery_fee=request.delivery_fee,
-        order_total=request.order_total
+        order_total=request.items_cost+request.delivery_fee
     )
     
     database.add(add_order)
