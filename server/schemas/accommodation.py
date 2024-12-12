@@ -14,7 +14,7 @@ class AllAccommodationsResponse(BaseModel):
 
 
 # Schema for showing the outcome of a put, post, or delete request
-class AccommodationsSuccessResponse(BaseModel):
+class AccommodationSuccessResponse(BaseModel):
     action: Literal['Update Accommodation Data', 'Add New Accommodation Data', 'Delete Accommodation Data']
     success: bool
     message: str
