@@ -14,9 +14,6 @@ PORT = os.getenv('DATABASE_PORT')
 NAME = os.getenv('DATABASE_NAME')
 URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
-# create asynchronous engine and sessionmaker binded to it for interacting with the database
-async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=True)  # adjust pool_size as tables are added
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("table,expected_rows", [
     (SupermarketProducts, 20),
@@ -25,6 +22,7 @@ async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=Tr
     # continue adding new tables here
 ])
 async def test_table_population(table, expected_rows):
+    async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=True)  # adjust pool_size as tables are added
     session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
     async with session() as test_session:
         try:
@@ -38,8 +36,5 @@ async def test_table_population(table, expected_rows):
             pytest.fail(f"Database connection failed: {e}")
         except Exception as e:
             pytest.fail(f"An error occurred within the test script: {e}")
-
-@pytest.fixture(scope="session", autouse=True)
-async def dispose_engine():
-    yield
-    await async_engine.dispose()
+        yield
+        await async_engine.dispose()
