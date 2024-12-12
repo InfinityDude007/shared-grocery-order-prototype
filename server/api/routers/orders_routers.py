@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from server.dependencies import fetch_db_session
-from server.schemas import OrderData, AllOrdersResponse, SuccessResponse
+from server.schemas import OrderData, AllOrdersResponse, OrdersSuccessResponse
 from server.models import Orders
 
 router = APIRouter()
@@ -76,8 +76,8 @@ async def fetch_order(order_id: str, database: AsyncSession = Depends(fetch_db_s
     )
 
 
-@router.put("/update/{order_id}", response_model=SuccessResponse)
-async def update_order(order_id: str, request: OrderData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.put("/update/{order_id}", response_model=OrdersSuccessResponse)
+async def update_order(order_id: str, request: OrderData, database: AsyncSession = Depends(fetch_db_session)) -> OrdersSuccessResponse:
     """
     Function Overview:
     Updates the details of a specific shared order.
@@ -87,7 +87,7 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
     2. If the shared order does not exist, raise a 404 Not Found exception.
     3. Update the shared order with the new details provided in the request.
     4. Commit the changes to the database.
-    5. Return a success message wrapped in a SuccessResponse schema.
+    5. Return a success message wrapped in a OrdersSuccessResponse schema.
 
     Parameters:
     order_id (str): Unique identifier of the shared order to update.
@@ -95,7 +95,7 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating the success of the update operation.
+    OrdersSuccessResponse: A response indicating the success of the update operation.
     """
     query_result = await database.get(Orders, order_id)
 
@@ -107,13 +107,13 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
         raise HTTPException(status_code=409, detail=f"Order ID '{request.order_id}' already exists.")
 
     if query_result.order_id == request.order_id:
-        success_response = SuccessResponse(
+        success_response = OrdersSuccessResponse(
         action="Update Order Data",
         success=True,
         message=f"Order information for ID '{order_id}' updated in database successfully!"
     )
     else:
-        success_response = SuccessResponse(
+        success_response = OrdersSuccessResponse(
         action="Update Order Data",
         success=True,
         message=f"Order information for ID '{order_id}' updated in database successfully, new order ID is '{request.order_id}'."
@@ -130,8 +130,8 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
     return success_response
 
 
-@router.post("/add", response_model=SuccessResponse)
-async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.post("/add", response_model=OrdersSuccessResponse)
+async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_db_session)) -> OrdersSuccessResponse:
     """
     Function Overview:
     Adds a new shared order to the database.
@@ -141,14 +141,14 @@ async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_d
     2. If it exists, raise a 409 Conflict exception.
     3. Create a new shared order with the data provided in the request.
     4. Add the shared order to the database and commit the transaction.
-    5. Return a success message wrapped in a SuccessResponse schema.
+    5. Return a success message wrapped in a OrdersSuccessResponse schema.
 
     Parameters:
     request (OrderData): Data for the new shared order to be added.
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating the success of the add operation.
+    OrdersSuccessResponse: A response indicating the success of the add operation.
     """
     query_result = await database.get(Orders, request.order_id)
 
@@ -166,15 +166,15 @@ async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_d
     database.add(add_order)
     await database.commit()
 
-    return SuccessResponse(
-        action="Add New Order",
+    return OrdersSuccessResponse(
+        action="Add New Order Data",
         success=True,
         message=f"Order with ID '{request.order_id}' added successfully!"
     )
 
 
-@router.delete("/delete/{order_id}", response_model=SuccessResponse)
-async def delete_order(order_id: str, database: AsyncSession = Depends(fetch_db_session)) -> SuccessResponse:
+@router.delete("/delete/{order_id}", response_model=OrdersSuccessResponse)
+async def delete_order(order_id: str, database: AsyncSession = Depends(fetch_db_session)) -> OrdersSuccessResponse:
     """
     Function Overview:
     Deletes a shared order from the database.
@@ -183,14 +183,14 @@ async def delete_order(order_id: str, database: AsyncSession = Depends(fetch_db_
     1. Use the order_id to locate the shared order in the database.
     2. If the shared order does not exist, raise a 404 Not Found exception.
     3. Remove the shared order from the database and commit the transaction.
-    4. Return a success message wrapped in a SuccessResponse schema.
+    4. Return a success message wrapped in a OrdersSuccessResponse schema.
 
     Parameters:
     order_id (str): Unique identifier of the shared order to delete.
     database (AsyncSession): Database session dependency to interact with the database.
 
     Returns:
-    SuccessResponse: A response indicating the success of the delete operation.
+    OrdersSuccessResponse: A response indicating the success of the delete operation.
     """
     query_result = await database.get(Orders, order_id)
 
@@ -200,8 +200,8 @@ async def delete_order(order_id: str, database: AsyncSession = Depends(fetch_db_
     await database.execute(delete(Orders).filter(Orders.order_id == order_id))
     await database.commit()
 
-    return SuccessResponse(
-        action="Delete Order",
+    return OrdersSuccessResponse(
+        action="Delete Order Data",
         success=True,
         message=f"Order with ID '{order_id}' deleted successfully!"
     )

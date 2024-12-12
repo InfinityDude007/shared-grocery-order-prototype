@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
-from server.models import SupermarketProducts # continue adding new tables here
+from server.models import SupermarketProducts, Users, Orders # continue adding new tables here
 
 # load environment variables, extract database connection parameters and construct database URL
 USERNAME = os.getenv('DATABASE_USER')
@@ -14,58 +14,44 @@ PORT = os.getenv('DATABASE_PORT')
 NAME = os.getenv('DATABASE_NAME')
 URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
-# create asynchronous engine and sessionmaker binded to it for interacting with the database
-async_engine = create_async_engine(URL, echo=True)
-Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
-
-"""
-Function Overview:
-Establishes an async connection to the database and runs queries to gather and count all rows in a database table.
-
-Function logic:
-1. Create an async session using the sessionmaker.
-2. Execute query to fetch all rows from specified table and count number of rows returned.
-3. Check if row count matches expected value for that table.
-4. Return result to the test fixture
-
-Returns:
-- Yields a boolean indicating if row count matches expected value and actual row count.
-- If query fails, a pytest failure is raised with an error message.
-"""
-async def query_db(table, expected_rows):
-    async with Session() as session:
-        try:
-            query_result = await session.execute(select(table))
-            rows = query_result.scalars().all()
-            rows_count = len(rows)
-            check_rows = rows_count == expected_rows
-            return check_rows, rows_count 
-        except OperationalError as e:
-            pytest.fail(f"Database connection failed: {e}")
-
 """
 Test Overview:
-Validates that tables in the database are populated with expected number of rows,
-using parameterization and query_db function to check tables and their expected row counts.
+Verifies that specified database tables contain expected number of rows,
+based on hardcoded data to ensure they were populated correctly.
 
 Test logic:
-1. Use query_db to execute query and check row count for each specified table.
-2. Check bool returned by query_db fixture, and return corresponding message.
+1. Test is parameterized to create multiple test instances for all tables with their expected row counts.
+2. For each table, an async session is created, and a query is executed to fetch all rows from table.
+3. The row count is then compared with the expected row count for the table.
+4. If the row count doesn't match, the test will fail with an appropriate error message indicating the mismatch.
 
 Parameters:
-- table: Table model being queried.
-- expected_rows: Expected number of rows for table being queried.
+- table: The table to be tested.
+- expected_rows: The expected number of rows in the table.
 
 Returns:
--  A message detailing if table passed check, or if it failed and why.
+- If row count matches, test passes and prints a success message.
+- If row count does not match, test fails and provides an error message with the expected and actual row counts.
 """
 @pytest.mark.asyncio
 @pytest.mark.parametrize("table,expected_rows", [
     (SupermarketProducts, 20),
+    (Users, 20),
+    (Orders, 15)
     # continue adding new tables here
 ])
 async def test_table_population(table, expected_rows):
-    check_rows, rows_count = await query_db(table, expected_rows)
-    assert check_rows, (
-            f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
-    print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
+    async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=True)  # adjust pool_size as tables are added
+    session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
+    async with session() as test_session:
+        try:
+            query_result = await test_session.execute(select(table))
+            rows = query_result.scalars().all()
+            rows_count = len(rows)
+            check_rows = rows_count == expected_rows
+            assert check_rows, (f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
+            print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
+        except OperationalError as e:
+            pytest.fail(f"Database connection failed: {e}")
+        except Exception as e:
+            pytest.fail(f"An error occurred within the test script: {e}")

@@ -1,3 +1,3 @@
-from .supermarket_api import ProductData, AllProductsResponse, SuccessResponse
-from .users_api import UserData, AllUsersResponse, SuccessResponse
-from .orders import OrderData, AllOrdersResponse, SuccessResponse
+from .supermarket_api import ProductData, AllProductsResponse, ProductsSuccessResponse
+from .users_api import UserData, AllUsersResponse, UsersSuccessResponse
+from .orders import OrderData, AllOrdersResponse, OrdersSuccessResponse

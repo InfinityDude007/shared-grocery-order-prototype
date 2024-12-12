@@ -6,6 +6,7 @@ on:
       - 'main'
       - '*-implementation'
       - '*-integration'
+      - 'fix-*'
   pull_request:
     branches:
       - 'main'

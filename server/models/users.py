@@ -14,4 +14,4 @@ class Users(BaseModel):
     accommodation_id = Column(String(5), nullable=True)
 
     def __repr__(self):
-         return f"<User(User ID={self.user_id}, Name={self.first_name} {self.last_name}, Email ID={self.email_id}, accommodation_id={self.accommodation_id})>"
+         return f"<User(ID = {self.user_id}, Name = {self.first_name} {self.last_name}, Email ID = {self.email_id}, Accommodation ID = {self.accommodation_id})>"

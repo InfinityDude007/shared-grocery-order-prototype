@@ -12,4 +12,4 @@ class Orders(BaseModel):
     delivery_fee = Column(Float, nullable= False)
     
     def __repr__(self):
-        return f"Orders(Order ID = {self.order_id}, Accommodation = {self.accommodation_id}, Date = {self.creation_date}, Status = {self.order_status}, Delivery = {self.delivery_fee})>"
+        return f"<Orders(ID = {self.order_id}, Accommodation ID = {self.accommodation_id}, Date = {self.creation_date}, Status = {self.order_status}, Delivery = {self.delivery_fee})>"
