@@ -1,7 +1,7 @@
 import os
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, close_all_sessions
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
 from server.models import SupermarketProducts, Users, Orders # continue adding new tables here
@@ -17,16 +17,6 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
 async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
-
-# create a new session for each test_table_population fixture run
-@pytest.fixture
-async def create_db_session():
-    async with Session() as connection:
-        try:
-            assert connection is not None
-            yield connection
-        except OperationalError as e:
-            pytest.fail(f"Failed to create database session: {e}")
 
 """
 Function Overview:
@@ -78,9 +68,10 @@ Returns:
     (Orders, 15)
     # continue adding new tables here
 ])
-async def test_table_population(create_db_session, table: type, expected_rows: int):
-    async with await create_db_session() as connection:
+async def test_table_population(table: type, expected_rows: int):
+    async with Session() as connection:
         check_rows, rows_count = await query_db(connection, table, expected_rows)
         assert check_rows, (
                 f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
         print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
+        await close_all_sessions()
