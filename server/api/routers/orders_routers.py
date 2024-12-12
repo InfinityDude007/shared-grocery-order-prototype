@@ -36,7 +36,9 @@ async def fetch_all_orders(database: AsyncSession = Depends(fetch_db_session)) -
             accommodation_id=order.accommodation_id,
             creation_date=order.creation_date,
             order_status=order.order_status,
-            delivery_fee=order.delivery_fee
+            items_cost=order.items_cost,
+            delivery_fee=order.delivery_fee,
+            order_total=order.order_total
         )
         for order in orders
     ]
@@ -72,7 +74,9 @@ async def fetch_order(order_id: str, database: AsyncSession = Depends(fetch_db_s
         accommodation_id=query_result.accommodation_id,
         creation_date=query_result.creation_date,
         order_status=query_result.order_status,
-        delivery_fee=query_result.delivery_fee
+        items_cost=query_result.items_cost,
+        delivery_fee=query_result.delivery_fee,
+        order_total=query_result.order_total
     )
 
 
@@ -123,7 +127,9 @@ async def update_order(order_id: str, request: OrderData, database: AsyncSession
     query_result.accommodation_id = request.accommodation_id
     query_result.creation_date = request.creation_date
     query_result.order_status = request.order_status
+    query_result.items_cost = request.items_cost
     query_result.delivery_fee = request.delivery_fee
+    query_result.order_total = request.items_cost+request.delivery_fee
 
     await database.commit()
 
@@ -160,7 +166,9 @@ async def add_order(request: OrderData, database: AsyncSession = Depends(fetch_d
         accommodation_id=request.accommodation_id,
         creation_date=request.creation_date,
         order_status=request.order_status,
-        delivery_fee=request.delivery_fee
+        items_cost=request.items_cost,
+        delivery_fee=request.delivery_fee,
+        order_total=request.items_cost+request.delivery_fee
     )
     
     database.add(add_order)

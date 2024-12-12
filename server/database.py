@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import os
 from dotenv import load_dotenv
-from .models import BaseModel, SupermarketProducts, Users, Orders, Accommodation
-from .models import hardcoded_products, hardcoded_users, hardcoded_orders, hardcoded_accommodations
+from .models import BaseModel, SupermarketProducts, Users, Orders, CostSplitting, Accommodation
+from .models import hardcoded_products, hardcoded_users, hardcoded_orders, hardcoded_cost_splittings, hardcoded_accommodations
 
 # load environment variables, extract database connection parameters and construct database URL
 load_dotenv()
@@ -106,10 +106,31 @@ session (AsyncSession): The database session used to interact with the database.
 async def insert_order_data(session):
     async with session() as db_session:
         for order in hardcoded_orders:
+            order["order_total"] = order["items_cost"] + order["delivery_fee"]
             db_session.add(Orders(**order))
         await db_session.commit()
         print("Hardcoded order data inserted into Orders table.")
 
+
+"""
+Function Overview:
+Inserts a list of hardcoded cost splitting data into CostSplitting table.
+
+Function Logic:
+1. Open a new database session using provided session.
+2. For each order in hardcoded cost splitting list, create a new CostSplitting record.
+3. Add each new order to the database session.
+4. Commit session to persist the changes.
+
+Parameters:
+session (AsyncSession): The database session used to interact with the database.
+"""
+async def insert_cost_splitting_data(session):
+    async with session() as db_session:
+        for cost_split in hardcoded_cost_splittings:
+            db_session.add(CostSplitting(**cost_split))
+        await db_session.commit()
+        print("Hardcoded cost splitting data inserted into CostSplitting table.")
 
 """
 Function Overview:
@@ -129,8 +150,7 @@ async def insert_accommodation_data(session):
         for accommodation in hardcoded_accommodations:
             db_session.add(Accommodation(**accommodation))
         await db_session.commit()
-        print("Hardcoded accommodation data inserted into Accommodation table.")
-
+        print("Hardcoded accommodation data inserted into Accommodation table.")   
 
 """
 Function Overview:
@@ -145,4 +165,5 @@ async def setup_database():
         await insert_product_data(session)
         await insert_user_data(session)
         await insert_order_data(session)
+        await insert_cost_splitting_data(session)
         await insert_accommodation_data(session)
