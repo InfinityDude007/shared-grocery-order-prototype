@@ -9,7 +9,9 @@ class OrderData(BaseModel):
     accommodation_id: str
     creation_date: datetime 
     order_status: str 
+    items_cost: float
     delivery_fee: float 
+    order_total: float
 
 
 # schema for the list of all order details available
