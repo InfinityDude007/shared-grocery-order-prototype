@@ -12,7 +12,7 @@ hardcoded_cost_splittings = [
     },
     {
         'user_id': 'U002',
-        'accommodation_id': 'A002',
+        'accommodation_id': 'A001',
         'order_id': 'O002',
         'order_items': [('Milk', 2), ('Bread', 1), ('Chocolate', 3)],
         'share_cost': 4.1,
@@ -22,7 +22,7 @@ hardcoded_cost_splittings = [
     },
     {
         'user_id': 'U003',
-        'accommodation_id': 'A003',
+        'accommodation_id': 'A001',
         'order_id': 'O003',
         'order_items': [('Soda', 4), ('Juice', 2), ('Eggs', 1)],
         'share_cost': 4.2,
@@ -32,22 +32,12 @@ hardcoded_cost_splittings = [
     },
     {
         'user_id': 'U004',
-        'accommodation_id': 'A004',
+        'accommodation_id': 'A001',
         'order_id': 'O004',
         'order_items': [('Lettuce', 3), ('Carrot', 4), ('Chicken Breast', 2)],
         'share_cost': 4.8,
         'payment': False,
         'delivery_fee': 2.0,
         'total_split': 30.9
-    },
-    {
-        'user_id': 'U005',
-        'accommodation_id': 'A005',
-        'order_id': 'O005',
-        'order_items': [('Yogurt', 5), ('Cheese', 2), ('Croissant', 3)],
-        'share_cost': 3.5,
-        'payment': True,
-        'delivery_fee': 2.0,
-        'total_split': 38.4
     }
 ]
