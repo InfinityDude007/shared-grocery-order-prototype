@@ -101,8 +101,8 @@ async def add_cost_splitting(request: CostSplittingData, database: AsyncSession 
     order_query_result = await database.execute(select(CostSplitting).filter(CostSplitting.order_id == request.order_id))
     order_query = order_query_result.scalar_one_or_none()
 
-    if order_query:
-        raise HTTPException(status_code=409, detail=f"Cost splitting entry for order ID '{request.order_id}' already exists.")
+    if order_query and order_query.user_id == request.user_id:
+        raise HTTPException(status_code=409, detail=f"Order ID '{request.order_id}' already has an entry for user ID '{order_query.user_id}'.")
 
     add_cost_splitting = CostSplitting(
         user_id=request.user_id,
@@ -148,12 +148,6 @@ async def update_cost_splitting(user_id: str, request: CostSplittingData, databa
 
     if not query_result:
         raise HTTPException(status_code=404, detail=f"Cost splitting entry for user ID '{user_id}' not found.")
-    
-    order_query_result = await database.execute(select(CostSplitting).filter(CostSplitting.order_id == request.order_id))
-    order_query = order_query_result.scalar_one_or_none()
-
-    if order_query and order_query.user_id == user_id:
-        raise HTTPException(status_code=409, detail=f"Order ID '{request.order_id}' already has an entry for user ID '{order_query.user_id}'.")
 
     query_result.user_id = request.user_id
     query_result.accommodation_id = request.accommodation_id
