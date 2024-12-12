@@ -18,6 +18,16 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 async_engine = create_async_engine(URL, echo=True)
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
+# create a new session for each test_table_population fixture run
+@pytest.fixture
+async def create_db_session():
+    async with Session() as connection:
+        try:
+            assert connection is not None
+            yield connection
+        except OperationalError as e:
+            pytest.fail(f"Failed to create database session: {e}")
+
 """
 Function Overview:
 Establishes an async connection to the database and runs queries to gather and count all rows in a database table.
@@ -32,15 +42,14 @@ Returns:
 - Yields a boolean indicating if row count matches expected value and actual row count.
 - If query fails, a pytest failure is raised with an error message.
 """
-async def query_db(table, expected_rows):
-    async with Session() as session:
+async def query_db(session: AsyncSession, table: type, expected_rows: int) -> tuple[bool, int]:
+    async with session.begin():
         try:
-            async with session.begin():
-                query_result = await session.execute(select(table))
-                rows = query_result.scalars().all()
-                rows_count = len(rows)
-                check_rows = rows_count == expected_rows
-                return check_rows, rows_count 
+            query_result = await session.execute(select(table))
+            rows = query_result.scalars().all()
+            rows_count = len(rows)
+            check_rows = rows_count == expected_rows
+            return check_rows, rows_count 
         except OperationalError as e:
             pytest.fail(f"Database connection failed: {e}")
         except Exception as e:
@@ -69,8 +78,9 @@ Returns:
     (Orders, 15)
     # continue adding new tables here
 ])
-async def test_table_population(table, expected_rows):
-    check_rows, rows_count = await query_db(table, expected_rows)
+async def test_table_population(create_db_session, table: type, expected_rows: int):
+    connection = await create_db_session()
+    check_rows, rows_count = await query_db(connection, table, expected_rows)
     assert check_rows, (
             f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
     print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
