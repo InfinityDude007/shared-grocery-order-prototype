@@ -5,10 +5,11 @@ from sqlalchemy import delete
 from server.dependencies import fetch_db_session
 from server.schemas import ProductData, AllProductsResponse, ProductsSuccessResponse
 from server.models import SupermarketProducts
+import logging
 
 router = APIRouter()
 
-
+logger = logging.getLogger(__name__)
 
 @router.get("/all", response_model=AllProductsResponse)
 async def fetch_all_products(database: AsyncSession = Depends(fetch_db_session)) -> AllProductsResponse:
@@ -41,6 +42,7 @@ async def fetch_all_products(database: AsyncSession = Depends(fetch_db_session))
         for product in products
     ]
 
+    logger.info(f"Fetched {len(products_list)} products.") 
     return AllProductsResponse(products=products_list)
 
 
@@ -65,8 +67,10 @@ async def fetch_product(product_id: str, database: AsyncSession = Depends(fetch_
     query_result = await database.get(SupermarketProducts, product_id)
 
     if not query_result:
+        logger.error(f"Product with ID '{product_id}' not found.")
         raise HTTPException(status_code=404, detail=f"Product with ID '{product_id}' not found.")
 
+    logger.info(f"Fetched product with ID '{product_id}'.")
     return ProductData(
         product_id=query_result.product_id,
         product_name=query_result.product_name,
@@ -101,6 +105,7 @@ async def update_product(product_id: str, request: ProductData, database: AsyncS
     query_result = await database.get(SupermarketProducts, product_id)
 
     if not query_result:
+        logger.error(f"Product with ID '{request.product_id}' already exists.")
         raise HTTPException(status_code=404, detail=f"Product with ID '{product_id}' not found.")
     
     result = await database.execute(select(SupermarketProducts).filter(SupermarketProducts.product_name == request.product_name))
@@ -132,7 +137,7 @@ async def update_product(product_id: str, request: ProductData, database: AsyncS
     query_result.product_stock = request.product_stock
 
     await database.commit()
-
+    
     return success_response
 
 
@@ -162,8 +167,10 @@ async def add_product(request: ProductData, database: AsyncSession = Depends(fet
     product_query_result = query_result.scalar_one_or_none()
 
     if id_query_result:
+        logger.error(f"Product with ID '{request.product_id}' already exists.")
         raise HTTPException(status_code=409, detail=f"Product with ID '{request.product_id}' already exists.")
     elif product_query_result:
+        logger.error(f"Product with ID '{request.product_id}' already exists.")
         raise HTTPException(status_code=409, detail=f"Product with name '{request.product_name}' already exists.")
     
     add_product = SupermarketProducts(
@@ -177,6 +184,7 @@ async def add_product(request: ProductData, database: AsyncSession = Depends(fet
     database.add(add_product)
     await database.commit()
 
+    logger.info(f"Product with ID '{request.product_id}' added successfully.")
     return ProductsSuccessResponse(
         action="Add New Product Data",
         success=True,
