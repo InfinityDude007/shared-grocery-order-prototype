@@ -5,4 +5,4 @@ from .users import Users
 from .orders import Orders
 
 # hardcoded data
-from .table_data import hardcoded_products, hardcoded_users, hardcoded_orders
+from .table_data import hardcoded_products, hardcoded_users, hardcoded_orders , hardcoded_accommodations
