@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
-from server.models import SupermarketProducts, Users, Orders # continue adding new tables here
+from server.models import SupermarketProducts, Users, Orders, Accommodation # continue adding new tables here
 
 # load environment variables, extract database connection parameters and construct database URL
 USERNAME = os.getenv('DATABASE_USER')
@@ -37,11 +37,12 @@ Returns:
 @pytest.mark.parametrize("table,expected_rows", [
     (SupermarketProducts, 20),
     (Users, 20),
-    (Orders, 15)
+    (Orders, 15),
+    (Accommodation, 5)
     # continue adding new tables here
 ])
 async def test_table_population(table, expected_rows):
-    async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=True)  # adjust pool_size as tables are added
+    async_engine = create_async_engine(URL, echo=True, pool_size=10, pool_pre_ping=True)  # adjust pool_size as tables are added
     session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
     async with session() as test_session:
         try:
