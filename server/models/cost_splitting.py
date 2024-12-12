@@ -6,7 +6,7 @@ class CostSplitting(BaseModel):
     __tablename__ = "CostSplitting"
 
     user_id =  Column(String(5), unique=True, nullable=False, primary_key=True)
-    accomodation_id = Column(String(5), nullable=False)
+    accommodation_id = Column(String(5), nullable=False)
     order_id =  Column(String(5), unique=True, nullable=False)
     order_items = Column(JSON, nullable=False)
     share_cost = Column(Float, nullable=False)

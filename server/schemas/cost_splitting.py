@@ -5,7 +5,7 @@ from typing import List, Tuple, Literal
 # schema for the details related to a single cost splitting entry
 class CostSplittingData(BaseModel):
     user_id: str
-    accomodation_id: str
+    accommodation_id: str
     order_id: str
     order_items: List[Tuple[str, int]]
     share_cost: float

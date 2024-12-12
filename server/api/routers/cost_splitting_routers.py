@@ -32,7 +32,7 @@ async def fetch_all_cost_splittings(database: AsyncSession = Depends(fetch_db_se
     cost_splittings_list = [
         CostSplittingData(
             user_id=cost.user_id,
-            accomodation_id=cost.accomodation_id,
+            accommodation_id=cost.accommodation_id,
             order_id=cost.order_id,
             order_items=cost.order_items,
             share_cost=cost.share_cost,
@@ -70,7 +70,7 @@ async def fetch_cost_splitting(user_id: str, database: AsyncSession = Depends(fe
     
     return CostSplittingData(
             user_id=query_result.user_id,
-            accomodation_id=query_result.accomodation_id,
+            accommodation_id=query_result.accommodation_id,
             order_id=query_result.order_id,
             order_items=query_result.order_items,
             share_cost=query_result.share_cost,
@@ -106,7 +106,7 @@ async def add_cost_splitting(request: CostSplittingData, database: AsyncSession 
 
     add_cost_splitting = CostSplitting(
         user_id=request.user_id,
-        accomodation_id=request.accomodation_id,
+        accommodation_id=request.accommodation_id,
         order_id=request.order_id,
         order_items=request.order_items,
         share_cost=request.share_cost,
@@ -156,7 +156,7 @@ async def update_cost_splitting(user_id: str, request: CostSplittingData, databa
         raise HTTPException(status_code=409, detail=f"Order ID '{request.order_id}' already has an entry for user ID '{order_query.user_id}'.")
 
     query_result.user_id = request.user_id
-    query_result.accomodation_id = request.accomodation_id
+    query_result.accommodation_id = request.accommodation_id
     query_result.order_id = request.order_id
     query_result.order_items = request.order_items
     query_result.share_cost = request.share_cost
