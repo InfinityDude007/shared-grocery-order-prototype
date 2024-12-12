@@ -6,4 +6,4 @@ from .orders import Orders
 from .cost_splitting import CostSplitting
 
 # hardcoded data
-from .table_data import hardcoded_products, hardcoded_users, hardcoded_orders
+from .table_data import hardcoded_products, hardcoded_users, hardcoded_orders, hardcoded_cost_splittings
