@@ -15,7 +15,7 @@ NAME = os.getenv('DATABASE_NAME')
 URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 
 # create asynchronous engine and sessionmaker binded to it for interacting with the database
-async_engine = create_async_engine(URL, echo=True, pool_size=3, pool_pre_ping=True)  # adjust pool_size as tables are added
+async_engine = create_async_engine(URL, echo=True, pool_size=4, pool_pre_ping=True)  # adjust pool_size as tables are added
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
