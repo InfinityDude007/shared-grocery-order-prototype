@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 
-@router.get("/products", response_model=AllProductsResponse)
+@router.get("/all", response_model=AllProductsResponse)
 async def fetch_all_products(database: AsyncSession = Depends(fetch_db_session)) -> AllProductsResponse:
     """
     Function Overview:
@@ -45,7 +45,7 @@ async def fetch_all_products(database: AsyncSession = Depends(fetch_db_session))
 
 
 
-@router.get("/fetch/{product_id}", response_model=ProductData)
+@router.get("/{product_id}", response_model=ProductData)
 async def fetch_product(product_id: str, database: AsyncSession = Depends(fetch_db_session)) -> ProductData:
     """
     Function Overview:

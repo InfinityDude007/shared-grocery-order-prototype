@@ -3,4 +3,4 @@ from .supermarket_api import router as supermarket_router
 
 router = APIRouter()
 
-router.include_router(supermarket_router, tags="Supermarket")
+router.include_router(supermarket_router, prefix="/product", tags="Supermarket")
