@@ -13,4 +13,4 @@ class SupermarketProducts(BaseModel):
     product_stock = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return f"SupermarketProducts(ID = {self.product_id}, Product Name = {self.product_name}, Category = {self.product_category}, Price = {self.product_price}, Stock = {self.product_stock})>"
+        return f"<SupermarketProducts(ID = {self.product_id}, Name = {self.product_name}, Category = {self.product_category}, Price = {self.product_price}, Stock = {self.product_stock})>"
