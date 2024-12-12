@@ -79,8 +79,8 @@ Returns:
     # continue adding new tables here
 ])
 async def test_table_population(create_db_session, table: type, expected_rows: int):
-    connection = await create_db_session()
-    check_rows, rows_count = await query_db(connection, table, expected_rows)
-    assert check_rows, (
-            f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
-    print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
+    async with await create_db_session() as connection:
+        check_rows, rows_count = await query_db(connection, table, expected_rows)
+        assert check_rows, (
+                f"Table '{table.__tablename__}' should have {expected_rows} rows, but check found {rows_count} rows.")
+        print (f"Table '{table.__tablename__}' has the expected {expected_rows} rows.")
