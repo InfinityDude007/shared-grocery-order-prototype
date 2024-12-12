@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 from .models import BaseModel, SupermarketProducts, Users, Orders, CostSplitting, Accommodation
 from .models import hardcoded_products, hardcoded_users, hardcoded_orders, hardcoded_cost_splittings, hardcoded_accommodations
+import logging
+
+logger=logging.getLogger(__name__)
 
 # load environment variables, extract database connection parameters and construct database URL
 load_dotenv()
@@ -32,6 +35,7 @@ Function Logic:
    do not cause issues.
 """
 async def create_database():
+    logger.info("Connecting to the PostgreSQL database to check if it exists.")
     connection = await asyncpg.connect(user=USERNAME, password=PASSWORD, host=HOST, port=PORT, database="postgres")
     try:
         db_created = await connection.fetchval("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname=$1)", NAME)
@@ -42,10 +46,12 @@ async def create_database():
             print(f"The database '{NAME}' already exists. Skipping creation.")
     finally:
         await connection.close()
-
+    
+    logger.info("Creating all tables from 'models'.")
     async with async_engine.begin() as db_connection:
         await db_connection.run_sync(BaseModel.metadata.drop_all)
         await db_connection.run_sync(BaseModel.metadata.create_all)
+    logger.info("All tables created successfully.")
 
 
 """
@@ -62,6 +68,7 @@ Parameters:
 session (AsyncSession): The database session used to interact with the database.
 """
 async def insert_product_data(session):
+    logger.info("Inserting hardcoded product data into SupermarketProducts table.")
     async with session() as db_session:
         for product in hardcoded_products:
             db_session.add(SupermarketProducts(**product))
@@ -83,6 +90,7 @@ Parameters:
 session (AsyncSession): The database session used to interact with the database.
 """
 async def insert_user_data(session):
+    logger.info("Inserting hardcoded user data into Users table.")
     async with session() as db_session:
         for user in hardcoded_users:
             db_session.add(Users(**user))
@@ -104,6 +112,7 @@ Parameters:
 session (AsyncSession): The database session used to interact with the database.
 """
 async def insert_order_data(session):
+    logger.info("Inserting hardcoded order data into Orders table.")
     async with session() as db_session:
         for order in hardcoded_orders:
             order["order_total"] = order["items_cost"] + order["delivery_fee"]
@@ -126,6 +135,7 @@ Parameters:
 session (AsyncSession): The database session used to interact with the database.
 """
 async def insert_cost_splitting_data(session):
+    logger.info("Inserting hardcoded cost splitting data into CostSplitting table.")
     async with session() as db_session:
         for cost_split in hardcoded_cost_splittings:
             db_session.add(CostSplitting(**cost_split))
@@ -146,6 +156,7 @@ Parameters:
 session (AsyncSession): The database session used to interact with the database.
 """
 async def insert_accommodation_data(session):
+    logger.info("Inserting hardcoded accommodation data into Accommodation table.")
     async with session() as db_session:
         for accommodation in hardcoded_accommodations:
             db_session.add(Accommodation(**accommodation))
@@ -161,6 +172,7 @@ Function Logic:
 2. Call insert_product_data function to insert predefined data into database.
 """
 async def setup_database():
+    logger.info("Setting up the database by inserting hardcoded data.")
     async with async_engine.begin():
         await insert_product_data(session)
         await insert_user_data(session)
