@@ -2,23 +2,23 @@
 
 hardcoded_accommodations = [
     {
-        'accom_id': 'A001',
-        'accommodation_users': ['U001', 'U006', 'U011', 'U016']
+        'accommodation_id': 'A001',
+        'accommodation_users': {'user_id': 'U001', 'user_id': 'U006', 'user_id': 'U011', 'user_id': 'U016'}
     },
     {
-        'accom_id': 'A002',
-        'accommodation_users': ['U002', 'U007', 'U012', 'U017']
+        'accommodation_id': 'A002',
+        'accommodation_users': {'user_id':'U002', 'user_id':'U007', 'user_id':'U012', 'user_id':'U017'}
     },
     {
-        'accom_id': 'A003',
-        'accommodation_users': ['U003', 'U008', 'U013', 'U018']
+        'accommodation_id': 'A003',
+        'accommodation_users': {'user_id':'U003', 'user_id':'U008', 'user_id':'U013', 'user_id':'U018'}
     },
     {
-        'accom_id': 'A004',
-        'accommodation_users': ['U004', 'U009', 'U014', 'U019']
+        'accommodation_id': 'A004',
+        'accommodation_users': {'user_id':'U004', 'user_id':'U009', 'user_id':'U014', 'user_id':'U019'}
     },
     {
-        'accom_id': 'A005',
-        'accommodation_users': ['U005', 'U010', 'U015', 'U020']
+        'accommodation_id': 'A005',
+        'accommodation_users': {'user_id':'U005', 'user_id':'U010', 'user_id':'U015', 'user_id':'U020'}
     }
 ]
