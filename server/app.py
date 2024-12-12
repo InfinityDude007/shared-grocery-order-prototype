@@ -2,6 +2,13 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .api import api_router
 from .database import create_database, setup_database
+from logging_config import setup_logging
+import logging
+
+setup_logging()
+
+logger = logging.getLogger(__name__)
+
 
 """
 Function Overview:
@@ -39,6 +46,7 @@ Returns:
 """
 @app.get('/')
 async def read_root():
+    logger.info("Root endpoint was called")
     return {
         "response": "Test route was called successfully.",
         "app_status": "Running."

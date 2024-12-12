@@ -5,13 +5,15 @@ from sqlalchemy import delete
 from server.dependencies import fetch_db_session
 from server.schemas import AllAccommodationsResponse, AccommodationSuccessResponse, AccommodationData
 from server.models import Accommodation
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-
-
 @router.get("/all", response_model=AllAccommodationsResponse)
 async def fetch_all_accommodations(database: AsyncSession = Depends(fetch_db_session)) -> AllAccommodationsResponse:
+    logger.info("Fetching all accommodations from the database.")
     """
     Function Overview:
     Fetches all accommodations from the database.
@@ -37,12 +39,13 @@ async def fetch_all_accommodations(database: AsyncSession = Depends(fetch_db_ses
         )
         for accommodation in accommodations
     ]
-
+    logger.info(f"Fetched {len(accommodations_list)} accommodations.") 
     return AllAccommodationsResponse(accommodations=accommodations_list)
 
 
 @router.get("/{accommodation_id}", response_model=AccommodationData)
 async def fetch_accommodation(accommodation_id: str, database: AsyncSession = Depends(fetch_db_session)) -> AccommodationData:
+    logger.info(f"Fetching accommodation with ID '{accommodation_id}'.")
     """
     Function Overview:
     Fetches details of a specific accommodation based on the provided accommodation ID.
@@ -62,8 +65,10 @@ async def fetch_accommodation(accommodation_id: str, database: AsyncSession = De
     query_result = await database.get(Accommodation, accommodation_id)
 
     if not query_result:
+        logger.error(f"Accommodation with ID '{accommodation_id}' not found.")
         raise HTTPException(status_code=404, detail=f"Accommodation with ID '{accommodation_id}' not found.")
-
+    
+    logger.info(f"Fetched accommodation with ID '{accommodation_id}'.")
     return AccommodationData(
         accommodation_id=query_result.accommodation_id,
         accommodation_users=query_result.accommodation_users
@@ -72,6 +77,7 @@ async def fetch_accommodation(accommodation_id: str, database: AsyncSession = De
 
 @router.post("/add", response_model=AccommodationSuccessResponse)
 async def add_accommodation(request: AccommodationData, database: AsyncSession = Depends(fetch_db_session)) -> AccommodationSuccessResponse:
+    logger.info(f"Adding new accommodation with ID '{request.accommodation_id}'.")
     """
     Function Overview:
     Adds a new accommodation to the database.
@@ -92,8 +98,9 @@ async def add_accommodation(request: AccommodationData, database: AsyncSession =
     existing_accommodation = await database.get(Accommodation, request.accommodation_id)
 
     if existing_accommodation:
+        logger.error(f"Accommodation with ID '{request.accommodation_id}' already exists.")
         raise HTTPException(status_code=409, detail=f"Accommodation with ID '{request.accommodation_id}' already exists.")
-
+    
     new_accommodation = Accommodation(
         accommodation_id=request.accommodation_id,
         accommodation_users=request.accommodation_users
@@ -102,6 +109,7 @@ async def add_accommodation(request: AccommodationData, database: AsyncSession =
     database.add(new_accommodation)
     await database.commit()
 
+    logger.info(f"Accommodation with ID '{request.accommodation_id}' added successfully.")
     return AccommodationSuccessResponse(
         action="Add New Accommodation",
         success=True,
@@ -111,6 +119,7 @@ async def add_accommodation(request: AccommodationData, database: AsyncSession =
 
 @router.put("/update/{accommodation_id}", response_model=AccommodationSuccessResponse)
 async def update_accommodation(accommodation_id: str, request: AccommodationData, database: AsyncSession = Depends(fetch_db_session)) -> AccommodationSuccessResponse:
+    logger.info(f"Updating accommodation with ID '{accommodation_id}'.")
     """
     Function Overview:
     Updates details of a specific accommodation in the database.
@@ -132,12 +141,14 @@ async def update_accommodation(accommodation_id: str, request: AccommodationData
     query_result = await database.get(Accommodation, accommodation_id)
 
     if not query_result:
+        logger.error(f"Accommodation with ID '{accommodation_id}' not found.")
         raise HTTPException(status_code=404, detail=f"Accommodation with ID '{accommodation_id}' not found.")
 
     query_result.accommodation_users = request.accommodation_users
 
     await database.commit()
-
+    
+    logger.info(f"Accommodation with ID '{accommodation_id}' updated successfully.")
     return AccommodationSuccessResponse(
         action="Update Accommodation Data",
         success=True,
@@ -147,6 +158,7 @@ async def update_accommodation(accommodation_id: str, request: AccommodationData
 
 @router.delete("/delete/{accommodation_id}", response_model=AccommodationSuccessResponse)
 async def delete_accommodation(accommodation_id: str, database: AsyncSession = Depends(fetch_db_session)) -> AccommodationSuccessResponse:
+    logger.info(f"Deleting accommodation with ID '{accommodation_id}'.")
     """
     Function Overview:
     Deletes a specific accommodation from the database based on the provided accommodation ID.
@@ -172,6 +184,7 @@ async def delete_accommodation(accommodation_id: str, database: AsyncSession = D
     await database.execute(delete(Accommodation).filter(Accommodation.accommodation_id == accommodation_id))
     await database.commit()
 
+    logger.info(f"Accommodation with ID '{accommodation_id}' deleted successfully.")
     return AccommodationSuccessResponse(
         action="Delete Accommodation Data",
         success=True,
