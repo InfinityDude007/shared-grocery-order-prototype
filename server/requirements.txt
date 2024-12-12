@@ -5,6 +5,7 @@ python-dotenv
 python-multipart
 pytest
 pytest-asyncio
+asyncio
 asyncpg
 sqlalchemy[asyncio]
 sqlalchemy-utils

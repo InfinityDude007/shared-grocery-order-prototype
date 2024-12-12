@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, close_all_sessions
 from sqlalchemy.future import select
 from sqlalchemy.exc import OperationalError
+import asyncio
 from server.models import SupermarketProducts, Users, Orders # continue adding new tables here
 
 # load environment variables, extract database connection parameters and construct database URL
@@ -18,6 +19,12 @@ URL = f"postgresql+asyncpg://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{NAME}"
 async_engine = create_async_engine(URL, echo=True, pool_size=5, pool_pre_ping=True)  # adjust pool_size as tables are added
 Session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
+
+@pytest.fixture(scope="module")
+def test_loop():
+    async_loop = asyncio.new_event_loop()
+    yield async_loop
+    async_loop.close()
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("table,expected_rows", [
